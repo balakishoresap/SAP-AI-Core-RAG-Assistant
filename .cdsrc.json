@@ -1,0 +1,25 @@
+{
+  "[development]": {
+    "auth": {
+      "kind": "mocked",
+      "users": {
+        "admin": {
+          "password": "admin",
+          "roles": ["admin"]
+        },
+        "user": {
+          "password": "user",
+          "roles": []
+        }
+      }
+    },
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "database": "db.sqlite"
+        }
+      }
+    }
+  }
+}

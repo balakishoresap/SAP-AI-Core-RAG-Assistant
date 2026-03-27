@@ -1,0 +1,123 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-03-27",
+    "description": "Sample HR policy documents for the RAG knowledge base demo",
+    "totalDocuments": 4,
+    "source": "Internal HR Policy Repository (simulated)"
+  },
+  "documents": [
+    {
+      "id": "HR-LEAVE-001",
+      "title": "Employee Leave Policy",
+      "category": "HR - Leave Management",
+      "effectiveDate": "2025-01-01",
+      "sections": [
+        {
+          "heading": "Annual Leave Entitlement",
+          "content": "All full-time employees are entitled to 20 working days of paid annual leave per calendar year. Part-time employees receive leave on a pro-rata basis. New employees who join mid-year receive leave proportional to their remaining months of service. For example, an employee joining on July 1st would receive 10 days of annual leave for that calendar year. Unused annual leave may be carried forward up to a maximum of 5 days into the next calendar year. Any carried-forward leave must be used by March 31st of the following year or it will expire."
+        },
+        {
+          "heading": "Sick Leave",
+          "content": "Employees are entitled to 12 days of paid sick leave per year. A medical certificate is required for absences exceeding 3 consecutive working days. Unused sick leave does not carry forward and cannot be encashed. For extended illness beyond 12 days, employees may apply for unpaid medical leave with approval from HR and their department head. The company reserves the right to request a medical examination by a company-designated physician for extended sick leave."
+        },
+        {
+          "heading": "Parental Leave",
+          "content": "Primary caregivers are entitled to 16 weeks of paid parental leave at full salary. Secondary caregivers receive 4 weeks of paid parental leave. Parental leave must begin within 12 months of the child's birth or adoption date. Employees must notify HR at least 8 weeks before the intended start date. Additional unpaid parental leave of up to 6 months may be granted upon request, subject to manager approval."
+        },
+        {
+          "heading": "Leave Application Process",
+          "content": "All leave requests must be submitted through the SAP SuccessFactors Employee Central portal at least 5 working days in advance for planned leave. Emergency leave requests should be communicated to the direct manager within 2 hours of the start of the working day. Leave approval follows the standard workflow: Employee submits request → Direct Manager approves → HR confirms. Requests for leave exceeding 10 consecutive days require additional approval from the department head."
+        },
+        {
+          "heading": "Public Holidays",
+          "content": "The company observes all nationally gazetted public holidays. Employees required to work on public holidays will receive compensatory time off or overtime pay at 1.5x the normal rate. The annual holiday calendar is published by HR in December for the following year and is available on the company intranet."
+        }
+      ]
+    },
+    {
+      "id": "HR-TRAVEL-001",
+      "title": "Business Travel Policy",
+      "category": "HR - Travel & Expenses",
+      "effectiveDate": "2025-01-01",
+      "sections": [
+        {
+          "heading": "Travel Authorization",
+          "content": "All business travel must be pre-approved through the SAP Concur travel management system. Domestic travel requires direct manager approval. International travel requires both manager and department head approval. Travel requests should be submitted at least 10 working days before the travel date to secure the best rates. Last-minute travel requests (less than 5 working days) require VP-level approval and written justification."
+        },
+        {
+          "heading": "Booking Guidelines",
+          "content": "All flights, hotels, and car rentals must be booked through the company's SAP Concur portal or the designated travel management company (TMC). Economy class is standard for flights under 6 hours. Business class is permitted for flights exceeding 6 hours with manager approval. Hotel bookings should follow the company's negotiated rate program. The maximum hotel rate is $200 per night for domestic travel and $300 per night for international travel, unless the city rate exception applies."
+        },
+        {
+          "heading": "Per Diem and Meal Allowances",
+          "content": "Employees on business travel receive a per diem allowance based on the destination city. Domestic per diem: $75 per day for meals and incidental expenses. International per diem: $100 per day for meals and incidental expenses. Per diem covers breakfast, lunch, dinner, and tips. If meals are provided by the event or host, the per diem is reduced accordingly: breakfast $15, lunch $20, dinner $40. Alcohol is not reimbursable."
+        },
+        {
+          "heading": "Expense Reporting",
+          "content": "All travel expenses must be submitted through SAP Concur within 10 working days of trip completion. Original receipts are required for all expenses exceeding $25. Credit card statements alone are not acceptable as receipts. Expense reports must include: trip purpose, attendees (for meals with clients), and business justification. Incomplete expense reports will be returned for correction. Reimbursement is processed within 15 working days of approved submission."
+        },
+        {
+          "heading": "Travel Safety",
+          "content": "Employees must register their travel in the company's travel tracking system for duty-of-care compliance. Travel to high-risk destinations requires completion of the travel safety briefing and approval from the Security & Risk team. Travel insurance is provided automatically for all approved business travel. Employees should download the company emergency assistance app and save the 24/7 emergency hotline number before departure."
+        }
+      ]
+    },
+    {
+      "id": "HR-EXPENSE-001",
+      "title": "Expense Reimbursement Policy",
+      "category": "HR - Finance",
+      "effectiveDate": "2025-01-01",
+      "sections": [
+        {
+          "heading": "General Expense Policy",
+          "content": "The company reimburses employees for reasonable and necessary business expenses incurred while performing their duties. All expenses must have a valid business purpose and be pre-approved where required. The company uses SAP Concur for all expense management. Personal expenses are not reimbursable under any circumstances. Employees should use corporate credit cards for business expenses where available."
+        },
+        {
+          "heading": "Approval Thresholds",
+          "content": "Expenses up to $500 require direct manager approval. Expenses between $500 and $2,000 require both manager and finance team approval. Expenses exceeding $2,000 require VP-level approval. Recurring monthly expenses (e.g., software subscriptions) must be approved annually through the procurement process. Emergency expenses exceeding normal thresholds may be submitted with post-facto approval if justified."
+        },
+        {
+          "heading": "Reimbursable Expenses",
+          "content": "Common reimbursable expenses include: business travel (covered under Travel Policy), client entertainment and meals (up to $150 per person with client name and business purpose documented), professional development and training (pre-approved through the Learning Portal), home office equipment (one-time setup allowance of $500 for remote workers, annual $200 refresh allowance), mobile phone allowance ($50 per month for employees who use personal devices for business), and professional association memberships (with manager approval)."
+        },
+        {
+          "heading": "Non-Reimbursable Expenses",
+          "content": "The following expenses are not reimbursable: personal entertainment, commuting costs between home and regular office, personal grooming, clothing (unless safety equipment), fines or penalties (including traffic and parking violations), expenses for family members accompanying on business travel, luxury or premium services when standard alternatives are available, and any expense lacking proper documentation or business justification."
+        },
+        {
+          "heading": "Submission and Processing",
+          "content": "Expense claims must be submitted within 30 calendar days of incurring the expense. Claims older than 60 days will not be reimbursed without CFO exception approval. All claims require itemized receipts. Reimbursement timelines: domestic expenses within 10 working days, international expenses within 15 working days. Direct deposit is the standard reimbursement method. Employees are responsible for tax implications of reimbursements in their local jurisdiction."
+        }
+      ]
+    },
+    {
+      "id": "HR-ONBOARD-001",
+      "title": "New Employee Onboarding Checklist",
+      "category": "HR - Onboarding",
+      "effectiveDate": "2025-01-01",
+      "sections": [
+        {
+          "heading": "Pre-Arrival (HR Actions - 2 Weeks Before Start)",
+          "content": "HR completes the following before the new employee's start date: Send welcome email with first-day instructions and dress code. Set up employee profile in SAP SuccessFactors. Request IT equipment (laptop, monitor, peripherals) through IT Service Portal. Create corporate email account and assign Microsoft 365 licenses. Provision SAP system access based on role-specific authorization matrix. Order employee ID badge and building access card. Assign a buddy/mentor from the same department. Schedule orientation sessions for the first week."
+        },
+        {
+          "heading": "Day 1 - Welcome and Setup",
+          "content": "The new employee's first day includes: Welcome meeting with direct manager (30 minutes). Collect IT equipment from the IT Help Desk (Building A, Floor 2). Complete mandatory compliance training modules in the SAP Learning Hub: Information Security Awareness, Code of Conduct, Data Privacy (GDPR), Anti-Harassment Policy. Setup corporate email, VPN, and SAP Logon. Badge photo and ID card collection from Security Office. Tour of office facilities including emergency exits, cafeteria, and collaboration spaces. Introduction to immediate team members."
+        },
+        {
+          "heading": "Week 1 - Foundation",
+          "content": "During the first week, new employees complete: HR orientation session covering benefits enrollment, leave policies, and payroll setup. Benefits enrollment through SAP SuccessFactors (medical, dental, life insurance) — must be completed within 30 days. IT systems training: SAP GUI, SAP Fiori Launchpad, Microsoft Teams, SharePoint. Department-specific onboarding sessions as scheduled by the manager. Review of role description, performance expectations, and first 90-day goals. Setup of development environment and access to source code repositories (for technical roles). First 1-on-1 with manager to discuss onboarding plan and answer questions."
+        },
+        {
+          "heading": "First 30 Days - Integration",
+          "content": "Within the first 30 days, new employees should: Complete all mandatory e-learning courses in SAP Learning Hub (minimum 8 courses). Attend the monthly New Employee Welcome session hosted by the CEO. Complete benefits enrollment and verify payroll direct deposit. Have introductory meetings with key stakeholders and cross-functional partners. Begin contributing to team projects under buddy/mentor guidance. Complete the 30-day onboarding feedback survey. Review and acknowledge all company policies in the employee handbook."
+        },
+        {
+          "heading": "90-Day Review",
+          "content": "At the 90-day mark: Manager conducts formal 90-day performance review using SAP SuccessFactors. Review covers: role alignment, cultural fit, skill development needs, and initial contributions. Employee and manager jointly set goals for the remainder of the probation period. HR conducts a separate check-in to address any onboarding concerns. Buddy/mentor relationship is formally reviewed — may continue informally. Probation period is typically 6 months. Confirmation of employment is communicated in writing upon successful completion of probation."
+        }
+      ]
+    }
+  ]
+}

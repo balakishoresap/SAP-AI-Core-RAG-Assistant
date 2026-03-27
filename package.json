@@ -1,0 +1,52 @@
+{
+  "name": "sap-ai-core-rag-assistant",
+  "version": "1.0.0",
+  "description": "RAG-based AI Assistant for SAP BTP using SAP AI Core and CAP",
+  "repository": "https://github.com/balakishoresap/sap-ai-core-rag-assistant",
+  "license": "Apache-2.0",
+  "private": true,
+  "dependencies": {
+    "@sap/cds": "^7",
+    "@sap/xssec": "^3",
+    "@sap-cloud-sdk/http-client": "^3",
+    "@sap-cloud-sdk/connectivity": "^3",
+    "express": "^4",
+    "hdb": "^0.19",
+    "passport": "^0.7"
+  },
+  "devDependencies": {
+    "@sap/cds-dk": "^7",
+    "@sap/ux-specification": "latest",
+    "rimraf": "^5"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "build": "cds build --production",
+    "watch": "cds watch",
+    "test": "node test/test-queries.js",
+    "clean": "rimraf gen"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sql"
+      },
+      "auth": {
+        "kind": "xsuaa"
+      },
+      "SAP_AI_CORE": {
+        "kind": "rest",
+        "credentials": {
+          "destination": "SAP_AI_CORE",
+          "path": "/v2"
+        }
+      }
+    },
+    "hana": {
+      "deploy-format": "hdbtable"
+    }
+  },
+  "sapux": [
+    "app"
+  ]
+}

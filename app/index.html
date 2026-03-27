@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAP AI RAG Assistant</title>
+  <style>
+    :root {
+      --sap-blue: #0a6ed1;
+      --sap-blue-dark: #0854a0;
+      --sap-bg: #f7f7f7;
+      --sap-shell: #354a5f;
+      --sap-white: #ffffff;
+      --sap-border: #d9d9d9;
+      --sap-text: #32363a;
+      --sap-text-light: #6a6d70;
+      --sap-success: #107e3e;
+      --sap-error: #bb0000;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: '72', 'Segoe UI', Arial, sans-serif;
+      background: var(--sap-bg);
+      color: var(--sap-text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Shell Bar */
+    .shell-bar {
+      background: var(--sap-shell);
+      color: white;
+      padding: 0 24px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .shell-bar h1 { font-size: 14px; font-weight: 600; }
+    .shell-bar .logo { font-size: 18px; }
+
+    /* Main Layout */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    /* Chat Messages */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      line-height: 1.5;
+      font-size: 14px;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: var(--sap-blue);
+      color: white;
+      border-bottom-right-radius: 2px;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: var(--sap-white);
+      border: 1px solid var(--sap-border);
+      border-bottom-left-radius: 2px;
+    }
+
+    .message .sources {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--sap-border);
+      font-size: 12px;
+      color: var(--sap-text-light);
+    }
+    .message .sources strong { color: var(--sap-text); }
+
+    .message .meta {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--sap-text-light);
+    }
+
+    .message.assistant .meta { color: #8c8c8c; }
+    .message.user .meta { color: rgba(255,255,255,0.7); }
+
+    /* Welcome */
+    .welcome {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--sap-text-light);
+    }
+    .welcome h2 { color: var(--sap-text); margin-bottom: 8px; font-size: 20px; }
+    .welcome p { font-size: 14px; }
+
+    /* Input Area */
+    .input-area {
+      display: flex;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--sap-border);
+      flex-shrink: 0;
+    }
+
+    .input-area input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid var(--sap-border);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .input-area input:focus { border-color: var(--sap-blue); }
+
+    .input-area button {
+      padding: 10px 24px;
+      background: var(--sap-blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .input-area button:hover { background: var(--sap-blue-dark); }
+    .input-area button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Loading */
+    .loading { display: flex; gap: 4px; padding: 8px 0; }
+    .loading span {
+      width: 8px; height: 8px;
+      background: var(--sap-blue);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .loading span:nth-child(1) { animation-delay: -0.32s; }
+    .loading span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell-bar">
+    <span class="logo">&#9670;</span>
+    <h1>SAP AI RAG Assistant</h1>
+  </div>
+
+  <div class="main">
+    <div class="chat-area" id="chatArea">
+      <div class="welcome">
+        <h2>Enterprise Knowledge Assistant</h2>
+        <p>Ask questions about your SAP landscape. Answers are grounded in your knowledge base using RAG.</p>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <input type="text" id="questionInput" placeholder="Ask a question about SAP..." autofocus />
+      <button id="sendBtn" onclick="sendQuestion()">Ask</button>
+    </div>
+  </div>
+
+  <script>
+    const chatArea = document.getElementById('chatArea');
+    const questionInput = document.getElementById('questionInput');
+    const sendBtn = document.getElementById('sendBtn');
+    let sessionId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
+
+    questionInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !sendBtn.disabled) sendQuestion();
+    });
+
+    async function sendQuestion() {
+      const question = questionInput.value.trim();
+      if (!question) return;
+
+      // Clear welcome
+      const welcome = chatArea.querySelector('.welcome');
+      if (welcome) welcome.remove();
+
+      // Show user message
+      appendMessage('user', question);
+      questionInput.value = '';
+      sendBtn.disabled = true;
+
+      // Show loading
+      const loadingEl = document.createElement('div');
+      loadingEl.className = 'message assistant';
+      loadingEl.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
+      chatArea.appendChild(loadingEl);
+      chatArea.scrollTop = chatArea.scrollHeight;
+
+      try {
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ req: { question, sessionId } })
+        });
+
+        loadingEl.remove();
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        let html = data.answer || 'No answer received.';
+        if (data.sources && data.sources.length > 0) {
+          html += `<div class="sources"><strong>Sources:</strong> ${data.sources.join(', ')}</div>`;
+        }
+        if (data.confidence !== undefined) {
+          html += `<div class="meta">Confidence: ${(data.confidence * 100).toFixed(1)}%</div>`;
+        }
+        appendMessage('assistant', html, true);
+
+      } catch (err) {
+        loadingEl.remove();
+        appendMessage('assistant', `Error: ${err.message}. Please try again.`, true);
+      }
+
+      sendBtn.disabled = false;
+      questionInput.focus();
+    }
+
+    function appendMessage(role, content, isHTML = false) {
+      const div = document.createElement('div');
+      div.className = `message ${role}`;
+      if (isHTML) {
+        div.innerHTML = content;
+      } else {
+        div.textContent = content;
+      }
+      chatArea.appendChild(div);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+  </script>
+</body>
+</html>

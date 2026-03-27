@@ -1,0 +1,34 @@
+{
+  "xsappname": "rag-assistant",
+  "tenant-mode": "dedicated",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.admin",
+      "description": "Administrator"
+    }
+  ],
+  "role-templates": [
+    {
+      "name": "Admin",
+      "description": "Administrator with full access",
+      "scope-references": ["$XSAPPNAME.admin"]
+    },
+    {
+      "name": "Viewer",
+      "description": "Read-only access to ask questions",
+      "scope-references": []
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "RAG_Assistant_Admin",
+      "description": "RAG Assistant Administrator",
+      "role-template-references": ["$XSAPPNAME.Admin"]
+    },
+    {
+      "name": "RAG_Assistant_User",
+      "description": "RAG Assistant End User",
+      "role-template-references": ["$XSAPPNAME.Viewer"]
+    }
+  ]
+}

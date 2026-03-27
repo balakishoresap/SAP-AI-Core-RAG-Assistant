@@ -1,0 +1,10 @@
+node_modules/
+gen/
+dist/
+*.db
+*.sqlite
+default-*.json
+connection.properties
+.env
+.env.*
+package-lock.json

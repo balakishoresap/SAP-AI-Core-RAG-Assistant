@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAP AI Core RAG Assistant</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230070f2'/><text x='16' y='22' text-anchor='middle' fill='white' font-size='18' font-family='Arial'>AI</text></svg>">
+  <style>
+    /* ═══════════════════════════════════════════════════
+       SAP Horizon Theme — CSS Custom Properties
+       Mirrors SAP's sap_horizon design tokens
+       ═══════════════════════════════════════════════════ */
+    :root {
+      /* Brand */
+      --sapBrandColor:            #0070f2;
+      --sapHighlightColor:        #0064d9;
+      --sapActiveColor:           #0058c0;
+
+      /* Shell */
+      --sapShellColor:            #354a5f;
+      --sapShell_Hover:           #2c3e50;
+      --sapShell_TextColor:       #ffffff;
+
+      /* Background */
+      --sapBackgroundColor:       #f5f6f7;
+      --sapBaseColor:             #ffffff;
+      --sapObjectHeader_Background: #ffffff;
+
+      /* Content */
+      --sapContent_LabelColor:    #556b82;
+      --sapContent_IconColor:     #0070f2;
+      --sapContent_ForegroundColor: #e8ecef;
+
+      /* Text */
+      --sapTextColor:             #1d2d3e;
+      --sapTitleColor:            #1d2d3e;
+      --sapLink_Color:            #0064d9;
+
+      /* Borders */
+      --sapField_BorderColor:     #89919a;
+      --sapGroup_TitleBorderColor:#a9b4be;
+      --sapList_BorderColor:      #e8ecef;
+
+      /* Status */
+      --sapPositiveColor:         #30914c;
+      --sapNegativeColor:         #e90b0b;
+      --sapCriticalColor:         #e76500;
+      --sapInformativeColor:      #0070f2;
+      --sapNeutralColor:          #788fa6;
+
+      /* Elevation */
+      --sapContent_Shadow0:       0 0 0 1px rgba(0,0,0,0.06);
+      --sapContent_Shadow1:       0 1px 4px 0 rgba(0,0,0,0.1);
+      --sapContent_Shadow2:       0 4px 16px 0 rgba(0,0,0,0.12);
+
+      /* Radius */
+      --sapElement_BorderCornerRadius: 0.5rem;
+      --sapField_BorderCornerRadius:   0.25rem;
+      --sapPopover_BorderCornerRadius: 0.75rem;
+
+      /* Font */
+      --sapFontFamily:            '72', '72full', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      --sapFontSize:              0.875rem;
+      --sapFontSmallSize:         0.75rem;
+      --sapFontHeader3Size:       1.25rem;
+      --sapFontHeader5Size:       1rem;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       Reset & Base
+       ═══════════════════════════════════════════════════ */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sapFontFamily);
+      font-size: var(--sapFontSize);
+      color: var(--sapTextColor);
+      background: var(--sapBackgroundColor);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       Shell Bar
+       ═══════════════════════════════════════════════════ */
+    .shell-bar {
+      background: var(--sapShellColor);
+      color: var(--sapShell_TextColor);
+      height: 2.75rem;
+      padding: 0 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .shell-bar__logo {
+      width: 1.75rem;
+      height: 1.75rem;
+      background: var(--sapBrandColor);
+      border-radius: 0.375rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.7rem;
+      letter-spacing: 0.02em;
+    }
+
+    .shell-bar__title {
+      font-size: var(--sapFontSize);
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .shell-bar__subtitle {
+      font-size: var(--sapFontSmallSize);
+      opacity: 0.7;
+      font-weight: 400;
+    }
+
+    .shell-bar__status {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: var(--sapFontSmallSize);
+      opacity: 0.8;
+    }
+
+    .shell-bar__status-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: var(--sapPositiveColor);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       Sub Header
+       ═══════════════════════════════════════════════════ */
+    .sub-header {
+      background: var(--sapBaseColor);
+      border-bottom: 1px solid var(--sapList_BorderColor);
+      padding: 0.625rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    .sub-header__breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: var(--sapFontSmallSize);
+      color: var(--sapContent_LabelColor);
+    }
+
+    .sub-header__breadcrumb a {
+      color: var(--sapLink_Color);
+      text-decoration: none;
+    }
+
+    .sub-header__actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       Buttons
+       ═══════════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: var(--sapField_BorderCornerRadius);
+      font-family: var(--sapFontFamily);
+      font-size: var(--sapFontSmallSize);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .btn--emphasized {
+      background: var(--sapBrandColor);
+      color: #fff;
+      border-color: var(--sapBrandColor);
+    }
+    .btn--emphasized:hover { background: var(--sapHighlightColor); }
+    .btn--emphasized:active { background: var(--sapActiveColor); }
+    .btn--emphasized:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--sapBrandColor);
+      border-color: var(--sapBrandColor);
+    }
+    .btn--ghost:hover { background: rgba(0,112,242,0.06); }
+
+    .btn--transparent {
+      background: transparent;
+      color: var(--sapContent_LabelColor);
+    }
+    .btn--transparent:hover { background: rgba(0,0,0,0.04); }
+
+    .btn--positive {
+      background: var(--sapPositiveColor);
+      color: #fff;
+      border-color: var(--sapPositiveColor);
+    }
+    .btn--positive:hover { background: #278a40; }
+
+    .btn--attention {
+      background: var(--sapCriticalColor);
+      color: #fff;
+      border-color: var(--sapCriticalColor);
+    }
+    .btn--attention:hover { background: #d45d00; }
+
+    .btn__icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       Main Layout
+       ═══════════════════════════════════════════════════ */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       Chat Area
+       ═══════════════════════════════════════════════════ */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      scroll-behavior: smooth;
+    }
+
+    .chat-area::-webkit-scrollbar { width: 6px; }
+    .chat-area::-webkit-scrollbar-track { background: transparent; }
+    .chat-area::-webkit-scrollbar-thumb { background: var(--sapNeutralColor); border-radius: 3px; }
+
+    /* ═══════════════════════════════════════════════════
+       Welcome Card
+       ═══════════════════════════════════════════════════ */
+    .welcome-card {
+      max-width: 38rem;
+      margin: 3rem auto;
+      text-align: center;
+    }
+
+    .welcome-card__icon {
+      width: 4rem;
+      height: 4rem;
+      margin: 0 auto 1.25rem;
+      background: linear-gradient(135deg, var(--sapBrandColor), #4d9cf8);
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(0,112,242,0.25);
+    }
+
+    .welcome-card__title {
+      font-size: var(--sapFontHeader3Size);
+      font-weight: 700;
+      color: var(--sapTitleColor);
+      margin-bottom: 0.5rem;
+    }
+
+    .welcome-card__desc {
+      color: var(--sapContent_LabelColor);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .welcome-card__chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.375rem 0.75rem;
+      background: var(--sapBaseColor);
+      border: 1px solid var(--sapList_BorderColor);
+      border-radius: 1rem;
+      font-size: var(--sapFontSmallSize);
+      color: var(--sapTextColor);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip:hover {
+      border-color: var(--sapBrandColor);
+      color: var(--sapBrandColor);
+      background: rgba(0,112,242,0.04);
+    }
+    .chip__icon { font-size: 0.875rem; }
+
+    /* ═══════════════════════════════════════════════════
+       Message Bubbles
+       ═══════════════════════════════════════════════════ */
+    .msg-row {
+      display: flex;
+      gap: 0.625rem;
+      max-width: 52rem;
+      margin: 0 auto;
+      width: 100%;
+      animation: msgIn 0.25s ease-out;
+    }
+    .msg-row--user { flex-direction: row-reverse; }
+
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-avatar {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+
+    .msg-avatar--user {
+      background: var(--sapHighlightColor);
+      color: #fff;
+    }
+
+    .msg-avatar--ai {
+      background: linear-gradient(135deg, #0070f2, #4d9cf8);
+      color: #fff;
+    }
+
+    .msg-bubble {
+      border-radius: var(--sapPopover_BorderCornerRadius);
+      line-height: 1.6;
+      max-width: calc(100% - 3rem);
+    }
+
+    .msg-bubble--user {
+      background: var(--sapBrandColor);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      border-bottom-right-radius: var(--sapField_BorderCornerRadius);
+    }
+
+    .msg-bubble--ai {
+      background: var(--sapBaseColor);
+      border: 1px solid var(--sapList_BorderColor);
+      box-shadow: var(--sapContent_Shadow1);
+      padding: 0;
+      border-bottom-left-radius: var(--sapField_BorderCornerRadius);
+      overflow: hidden;
+    }
+
+    .msg-body {
+      padding: 0.875rem 1rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    /* ── Confidence Badge ── */
+    .msg-confidence {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 1rem;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-top: 0.5rem;
+    }
+
+    .msg-confidence--high {
+      background: rgba(48,145,76,0.1);
+      color: var(--sapPositiveColor);
+    }
+    .msg-confidence--medium {
+      background: rgba(231,101,0,0.1);
+      color: var(--sapCriticalColor);
+    }
+    .msg-confidence--low {
+      background: rgba(233,11,11,0.1);
+      color: var(--sapNegativeColor);
+    }
+
+    .msg-confidence__bar {
+      width: 2.5rem;
+      height: 0.25rem;
+      border-radius: 2px;
+      background: var(--sapContent_ForegroundColor);
+      overflow: hidden;
+    }
+
+    .msg-confidence__fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    /* ── Sources Panel ── */
+    .msg-sources {
+      background: var(--sapBackgroundColor);
+      border-top: 1px solid var(--sapList_BorderColor);
+      padding: 0.625rem 1rem;
+    }
+
+    .msg-sources__title {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--sapContent_LabelColor);
+      margin-bottom: 0.375rem;
+    }
+
+    .msg-sources__list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+    }
+
+    .source-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.2rem 0.5rem;
+      background: var(--sapBaseColor);
+      border: 1px solid var(--sapList_BorderColor);
+      border-radius: var(--sapField_BorderCornerRadius);
+      font-size: 0.6875rem;
+      color: var(--sapTextColor);
+    }
+    .source-tag__icon { color: var(--sapContent_IconColor); font-size: 0.75rem; }
+
+    /* ── Governed Action ── */
+    .msg-actions {
+      padding: 0.5rem 1rem 0.75rem;
+      border-top: 1px solid var(--sapList_BorderColor);
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* ── Timestamp ── */
+    .msg-time {
+      font-size: 0.625rem;
+      color: var(--sapNeutralColor);
+      margin-top: 0.25rem;
+      padding: 0 0.375rem;
+    }
+    .msg-row--user .msg-time { text-align: right; }
+
+    /* ═══════════════════════════════════════════════════
+       Loading Indicator
+       ═══════════════════════════════════════════════════ */
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.875rem 1rem;
+    }
+
+    .typing-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      background: var(--sapNeutralColor);
+      border-radius: 50%;
+      animation: typingPulse 1.2s ease-in-out infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes typingPulse {
+      0%, 60%, 100% { transform: scale(0.6); opacity: 0.4; }
+      30% { transform: scale(1); opacity: 1; }
+    }
+
+    .typing-label {
+      font-size: var(--sapFontSmallSize);
+      color: var(--sapNeutralColor);
+      margin-left: 0.375rem;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       Input Bar
+       ═══════════════════════════════════════════════════ */
+    .input-bar {
+      background: var(--sapBaseColor);
+      border-top: 1px solid var(--sapList_BorderColor);
+      padding: 0.75rem 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .input-bar__inner {
+      max-width: 52rem;
+      margin: 0 auto;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+
+    .input-bar__field {
+      flex: 1;
+      position: relative;
+    }
+
+    .input-bar__textarea {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid var(--sapField_BorderColor);
+      border-radius: var(--sapElement_BorderCornerRadius);
+      font-family: var(--sapFontFamily);
+      font-size: var(--sapFontSize);
+      color: var(--sapTextColor);
+      background: var(--sapBaseColor);
+      resize: none;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      line-height: 1.5;
+      min-height: 2.5rem;
+      max-height: 8rem;
+      overflow-y: auto;
+      rows: 1;
+    }
+    .input-bar__textarea:focus {
+      border-color: var(--sapBrandColor);
+      box-shadow: 0 0 0 2px rgba(0,112,242,0.16);
+    }
+    .input-bar__textarea::placeholder { color: var(--sapNeutralColor); }
+
+    .input-bar__hint {
+      font-size: 0.625rem;
+      color: var(--sapNeutralColor);
+      margin-top: 0.25rem;
+      text-align: right;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       BPA Modal
+       ═══════════════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay.active { display: flex; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: var(--sapBaseColor);
+      border-radius: var(--sapPopover_BorderCornerRadius);
+      box-shadow: var(--sapContent_Shadow2);
+      width: 28rem;
+      max-width: 90vw;
+      animation: slideUp 0.25s ease-out;
+      overflow: hidden;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(16px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal__header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--sapList_BorderColor);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal__title {
+      font-size: var(--sapFontHeader5Size);
+      font-weight: 700;
+      color: var(--sapTitleColor);
+    }
+
+    .modal__close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--sapContent_LabelColor);
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 1;
+    }
+    .modal__close:hover { color: var(--sapTextColor); }
+
+    .modal__body { padding: 1.25rem; }
+
+    .modal__field {
+      margin-bottom: 1rem;
+    }
+
+    .modal__label {
+      display: block;
+      font-size: var(--sapFontSmallSize);
+      font-weight: 600;
+      color: var(--sapContent_LabelColor);
+      margin-bottom: 0.25rem;
+    }
+
+    .modal__value {
+      font-size: var(--sapFontSize);
+      color: var(--sapTextColor);
+      padding: 0.5rem 0.75rem;
+      background: var(--sapBackgroundColor);
+      border-radius: var(--sapField_BorderCornerRadius);
+      border: 1px solid var(--sapList_BorderColor);
+    }
+
+    .modal__progress {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 0;
+    }
+    .modal__progress.active { display: flex; }
+
+    .modal__spinner {
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 2px solid var(--sapList_BorderColor);
+      border-top-color: var(--sapBrandColor);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .modal__success {
+      display: none;
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .modal__success.active { display: block; }
+    .modal__success-icon {
+      width: 3rem;
+      height: 3rem;
+      margin: 0 auto 0.75rem;
+      background: rgba(48,145,76,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: var(--sapPositiveColor);
+    }
+
+    .modal__footer {
+      padding: 0.75rem 1.25rem;
+      border-top: 1px solid var(--sapList_BorderColor);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       Responsive
+       ═══════════════════════════════════════════════════ */
+    @media (max-width: 640px) {
+      .shell-bar { padding: 0 0.75rem; }
+      .shell-bar__subtitle { display: none; }
+      .sub-header { padding: 0.5rem 0.75rem; }
+      .chat-area { padding: 0.75rem; }
+      .input-bar { padding: 0.625rem 0.75rem; }
+      .msg-bubble { max-width: calc(100% - 2.5rem); }
+      .welcome-card { margin: 1.5rem auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════ Shell Bar ════════════ -->
+  <header class="shell-bar">
+    <div class="shell-bar__logo">AI</div>
+    <div>
+      <span class="shell-bar__title">SAP AI Core RAG Assistant</span>
+      <span class="shell-bar__subtitle">— Powered by SAP BTP</span>
+    </div>
+    <div class="shell-bar__status">
+      <span class="shell-bar__status-dot"></span>
+      <span>Connected</span>
+    </div>
+  </header>
+
+  <!-- ════════════ Sub Header ════════════ -->
+  <div class="sub-header">
+    <div class="sub-header__breadcrumb">
+      <a href="#">Home</a>
+      <span>›</span>
+      <a href="#">AI Services</a>
+      <span>›</span>
+      <span>Knowledge Assistant</span>
+    </div>
+    <div class="sub-header__actions">
+      <button class="btn btn--transparent" onclick="clearChat()" title="Clear chat">
+        <span class="btn__icon">&#x1F5D1;</span> Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════════ Main ════════════ -->
+  <div class="main">
+    <div class="chat-area" id="chatArea">
+
+      <!-- Welcome -->
+      <div class="welcome-card" id="welcomeCard">
+        <div class="welcome-card__icon">&#x2728;</div>
+        <h2 class="welcome-card__title">Enterprise Knowledge Assistant</h2>
+        <p class="welcome-card__desc">
+          Ask questions about HR policies, travel guidelines, expense management, and onboarding procedures.
+          Answers are grounded in your enterprise knowledge base using <strong>Retrieval-Augmented Generation</strong>.
+        </p>
+        <div class="welcome-card__chips">
+          <button class="chip" onclick="askSuggested(this)">
+            <span class="chip__icon">&#x1F4C5;</span> What is the annual leave policy?
+          </button>
+          <button class="chip" onclick="askSuggested(this)">
+            <span class="chip__icon">&#x2708;</span> Business travel flight class rules?
+          </button>
+          <button class="chip" onclick="askSuggested(this)">
+            <span class="chip__icon">&#x1F4B0;</span> Expense approval thresholds?
+          </button>
+          <button class="chip" onclick="askSuggested(this)">
+            <span class="chip__icon">&#x1F44B;</span> What happens on onboarding Day 1?
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════ Input Bar ════════════ -->
+    <div class="input-bar">
+      <div class="input-bar__inner">
+        <div class="input-bar__field">
+          <textarea
+            class="input-bar__textarea"
+            id="questionInput"
+            placeholder="Ask a question about HR policies, travel, expenses, or onboarding..."
+            rows="1"
+          ></textarea>
+          <div class="input-bar__hint">Press Enter to send &middot; Shift+Enter for new line</div>
+        </div>
+        <button class="btn btn--emphasized" id="sendBtn" onclick="sendQuestion()">
+          <span class="btn__icon">&#x27A4;</span> Ask
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ BPA Modal ════════════ -->
+  <div class="modal-overlay" id="bpaModal">
+    <div class="modal">
+      <div class="modal__header">
+        <span class="modal__title">&#x1F6E1; Governed Action — BPA Workflow</span>
+        <button class="modal__close" onclick="closeBpaModal()">&times;</button>
+      </div>
+      <div class="modal__body">
+        <div id="bpaForm">
+          <div class="modal__field">
+            <span class="modal__label">Action Type</span>
+            <div class="modal__value" id="bpaAction">Leave Request Approval</div>
+          </div>
+          <div class="modal__field">
+            <span class="modal__label">Routed To</span>
+            <div class="modal__value">SAP Build Process Automation</div>
+          </div>
+          <div class="modal__field">
+            <span class="modal__label">Approval Chain</span>
+            <div class="modal__value">Direct Manager → HR Business Partner → Auto-Confirm</div>
+          </div>
+          <div class="modal__field">
+            <span class="modal__label">SLA</span>
+            <div class="modal__value">24 hours (escalation after 48h)</div>
+          </div>
+        </div>
+        <div class="modal__progress" id="bpaProgress">
+          <div class="modal__spinner"></div>
+          <span>Submitting to SAP Build Process Automation...</span>
+        </div>
+        <div class="modal__success" id="bpaSuccess">
+          <div class="modal__success-icon">&#x2714;</div>
+          <strong>Workflow Created Successfully</strong>
+          <p style="color: var(--sapContent_LabelColor); margin-top: 0.375rem; font-size: var(--sapFontSmallSize);">
+            Task ID: BPA-2026-<span id="bpaTaskId"></span><br>
+            Routed to your manager for approval.<br>
+            Track status in SAP Build Process Automation.
+          </p>
+        </div>
+      </div>
+      <div class="modal__footer" id="bpaFooter">
+        <button class="btn btn--ghost" onclick="closeBpaModal()">Cancel</button>
+        <button class="btn btn--positive" id="bpaSubmitBtn" onclick="submitBpaAction()">
+          <span class="btn__icon">&#x2713;</span> Submit for Approval
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ Script ════════════ -->
+  <script>
+    const chatArea   = document.getElementById('chatArea');
+    const input      = document.getElementById('questionInput');
+    const sendBtn    = document.getElementById('sendBtn');
+    const sessionId  = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36);
+
+    let lastAnswer   = '';
+    let msgCount     = 0;
+
+    // ── Auto-resize textarea ──
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 128) + 'px';
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (!sendBtn.disabled) sendQuestion();
+      }
+    });
+
+    // ── Suggested chip click ──
+    function askSuggested(chip) {
+      const text = chip.textContent.trim();
+      input.value = text;
+      sendQuestion();
+    }
+
+    // ── Clear chat ──
+    function clearChat() {
+      chatArea.innerHTML = '';
+      // Re-add welcome
+      chatArea.innerHTML = `
+        <div class="welcome-card" id="welcomeCard">
+          <div class="welcome-card__icon">&#x2728;</div>
+          <h2 class="welcome-card__title">Enterprise Knowledge Assistant</h2>
+          <p class="welcome-card__desc">Ask questions about HR policies, travel guidelines, expense management, and onboarding.</p>
+        </div>`;
+      msgCount = 0;
+    }
+
+    // ── Format time ──
+    function timeNow() {
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // ── Send Question ──
+    async function sendQuestion() {
+      const question = input.value.trim();
+      if (!question) return;
+
+      // Remove welcome
+      const wc = document.getElementById('welcomeCard');
+      if (wc) wc.remove();
+
+      // User bubble
+      addUserMessage(question);
+      input.value = '';
+      input.style.height = 'auto';
+      sendBtn.disabled = true;
+
+      // Loading bubble
+      const loadingRow = createLoadingBubble();
+      chatArea.appendChild(loadingRow);
+      scrollToBottom();
+
+      try {
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ req: { question, sessionId } })
+        });
+
+        loadingRow.remove();
+
+        if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+        const data = await res.json();
+        lastAnswer = data.answer || '';
+
+        addAssistantMessage(data);
+
+      } catch (err) {
+        loadingRow.remove();
+        addAssistantMessage({
+          answer: `Unable to reach the server. ${err.message}`,
+          confidence: 0,
+          sources: []
+        });
+      }
+
+      sendBtn.disabled = false;
+      input.focus();
+    }
+
+    // ── User Message ──
+    function addUserMessage(text) {
+      msgCount++;
+      const row = document.createElement('div');
+      row.className = 'msg-row msg-row--user';
+      row.innerHTML = `
+        <div class="msg-avatar msg-avatar--user">U</div>
+        <div>
+          <div class="msg-bubble msg-bubble--user">${escapeHtml(text)}</div>
+          <div class="msg-time">${timeNow()}</div>
+        </div>`;
+      chatArea.appendChild(row);
+      scrollToBottom();
+    }
+
+    // ── Assistant Message ──
+    function addAssistantMessage(data) {
+      msgCount++;
+      const conf       = typeof data.confidence === 'number' ? data.confidence : 0;
+      const confPct    = (conf * 100).toFixed(1);
+      const confClass  = conf >= 0.8 ? 'high' : conf >= 0.6 ? 'medium' : 'low';
+      const confLabel  = conf >= 0.8 ? 'High' : conf >= 0.6 ? 'Medium' : 'Low';
+      const confColor  = conf >= 0.8 ? 'var(--sapPositiveColor)' : conf >= 0.6 ? 'var(--sapCriticalColor)' : 'var(--sapNegativeColor)';
+
+      // Sources
+      const sources = (data.sources || []).filter((s, i, a) => a.indexOf(s) === i).slice(0, 5);
+      let sourcesHtml = '';
+      if (sources.length > 0) {
+        const tags = sources.map(s =>
+          `<span class="source-tag"><span class="source-tag__icon">&#x1F4C4;</span>${escapeHtml(s)}</span>`
+        ).join('');
+        sourcesHtml = `
+          <div class="msg-sources">
+            <div class="msg-sources__title">&#x1F50D; Sources (RAG Retrieval)</div>
+            <div class="msg-sources__list">${tags}</div>
+          </div>`;
+      }
+
+      // Show governed action button on answers that look actionable
+      const showAction = conf >= 0.6 && sources.length > 0;
+      const actionsHtml = showAction ? `
+        <div class="msg-actions">
+          <button class="btn btn--attention" onclick="openBpaModal()">
+            <span class="btn__icon">&#x1F6E1;</span> Governed Action
+          </button>
+          <button class="btn btn--transparent" onclick="copyAnswer(this)" title="Copy answer">
+            <span class="btn__icon">&#x1F4CB;</span> Copy
+          </button>
+        </div>` : '';
+
+      const row = document.createElement('div');
+      row.className = 'msg-row';
+      row.innerHTML = `
+        <div class="msg-avatar msg-avatar--ai">AI</div>
+        <div style="min-width:0;flex:1;max-width:calc(100% - 3rem)">
+          <div class="msg-bubble msg-bubble--ai">
+            <div class="msg-body">
+              ${escapeHtml(data.answer || 'No answer received.')}
+              <div class="msg-confidence msg-confidence--${confClass}">
+                <span>${confLabel} Confidence: ${confPct}%</span>
+                <span class="msg-confidence__bar">
+                  <span class="msg-confidence__fill" style="width:${confPct}%;background:${confColor}"></span>
+                </span>
+              </div>
+            </div>
+            ${sourcesHtml}
+            ${actionsHtml}
+          </div>
+          <div class="msg-time">${timeNow()} &middot; ${data.modelId || 'SAP AI Core'}</div>
+        </div>`;
+      chatArea.appendChild(row);
+      scrollToBottom();
+    }
+
+    // ── Loading Bubble ──
+    function createLoadingBubble() {
+      const row = document.createElement('div');
+      row.className = 'msg-row';
+      row.innerHTML = `
+        <div class="msg-avatar msg-avatar--ai">AI</div>
+        <div>
+          <div class="msg-bubble msg-bubble--ai">
+            <div class="typing-indicator">
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-dot"></span>
+              <span class="typing-label">Searching knowledge base...</span>
+            </div>
+          </div>
+        </div>`;
+      return row;
+    }
+
+    // ── BPA Modal ──
+    function openBpaModal() {
+      document.getElementById('bpaModal').classList.add('active');
+      document.getElementById('bpaForm').style.display = 'block';
+      document.getElementById('bpaProgress').classList.remove('active');
+      document.getElementById('bpaSuccess').classList.remove('active');
+      document.getElementById('bpaFooter').style.display = 'flex';
+      document.getElementById('bpaSubmitBtn').disabled = false;
+    }
+
+    function closeBpaModal() {
+      document.getElementById('bpaModal').classList.remove('active');
+    }
+
+    function submitBpaAction() {
+      document.getElementById('bpaSubmitBtn').disabled = true;
+      document.getElementById('bpaForm').style.display = 'none';
+      document.getElementById('bpaProgress').classList.add('active');
+
+      setTimeout(() => {
+        document.getElementById('bpaProgress').classList.remove('active');
+        document.getElementById('bpaSuccess').classList.add('active');
+        document.getElementById('bpaTaskId').textContent = Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('bpaFooter').innerHTML = `
+          <button class="btn btn--emphasized" onclick="closeBpaModal()">Done</button>`;
+      }, 2000);
+    }
+
+    // ── Copy Answer ──
+    function copyAnswer(btn) {
+      navigator.clipboard.writeText(lastAnswer).then(() => {
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="btn__icon">&#x2714;</span> Copied';
+        setTimeout(() => { btn.innerHTML = origHtml; }, 1500);
+      });
+    }
+
+    // ── Utilities ──
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function scrollToBottom() {
+      requestAnimationFrame(() => {
+        chatArea.scrollTop = chatArea.scrollHeight;
+      });
+    }
+
+    // ── Focus on load ──
+    input.focus();
+  </script>
+</body>
+</html>
