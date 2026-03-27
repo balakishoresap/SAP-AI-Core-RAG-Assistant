@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAP AI Core RAG Assistant - Architecture Flowcharts</title>
+<style>
+  :root {
+    --sapBrandColor: #0070F2;
+    --sapShellColor: #354A5F;
+    --sapHighlight: #0854A0;
+    --sapSuccess: #107E3E;
+    --sapWarning: #E9730C;
+    --sapError: #BB0000;
+    --sapInfo: #0070F2;
+    --sapNeutral: #6A6D70;
+    --sapAccent1: #D08014;
+    --sapAccent2: #D04A02;
+    --sapAccent3: #E8712D;
+    --sapAccent4: #AA0808;
+    --sapAccent5: #286EB4;
+    --sapAccent6: #0B6295;
+    --sapAccent7: #1C857A;
+    --sapAccent8: #475E75;
+    --bg: #F7F7F7;
+    --card: #FFFFFF;
+    --text: #32363A;
+    --textLight: #6A6D70;
+    --border: #D9D9D9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: '72', 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--sapShellColor) 0%, #1A2B3C 100%);
+    color: white; padding: 40px 60px; position: relative; overflow: hidden;
+  }
+  .header::after {
+    content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(0,112,242,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .header h1 { font-size: 28px; font-weight: 300; margin-bottom: 8px; }
+  .header h1 span { font-weight: 700; }
+  .header p { font-size: 14px; opacity: 0.8; }
+  .badge { display: inline-block; background: var(--sapBrandColor); color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px; margin-top: 8px; }
+
+  /* Navigation */
+  .nav { background: white; border-bottom: 1px solid var(--border); padding: 0 60px; display: flex; gap: 0; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+  .nav a { padding: 14px 20px; font-size: 13px; color: var(--textLight); text-decoration: none; border-bottom: 3px solid transparent; transition: all 0.2s; }
+  .nav a:hover, .nav a.active { color: var(--sapBrandColor); border-bottom-color: var(--sapBrandColor); }
+
+  /* Main */
+  .main { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+  .section { margin-bottom: 60px; }
+  .section-title { font-size: 22px; font-weight: 600; color: var(--sapShellColor); margin-bottom: 6px; }
+  .section-sub { font-size: 13px; color: var(--textLight); margin-bottom: 30px; }
+
+  /* SVG Flowchart Styles */
+  svg { width: 100%; height: auto; display: block; }
+  .fc-card { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08)); }
+  .fc-card rect { rx: 10; ry: 10; }
+  .fc-arrow { fill: none; stroke: #89919A; stroke-width: 2; marker-end: url(#arrowhead); }
+  .fc-arrow-highlight { fill: none; stroke: var(--sapBrandColor); stroke-width: 2.5; marker-end: url(#arrowhead-blue); stroke-dasharray: 6 3; }
+  .fc-label { font-family: '72', 'Segoe UI', Arial, sans-serif; font-size: 12px; fill: var(--textLight); }
+  .fc-title { font-family: '72', 'Segoe UI', Arial, sans-serif; font-size: 13px; fill: white; font-weight: 600; }
+  .fc-body { font-family: '72', 'Segoe UI', Arial, sans-serif; font-size: 11px; fill: var(--text); }
+  .fc-body-light { font-family: '72', 'Segoe UI', Arial, sans-serif; font-size: 10px; fill: var(--textLight); }
+  .fc-icon { font-size: 16px; }
+
+  /* Legend */
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px; padding: 16px 20px; background: white; border-radius: 10px; border: 1px solid var(--border); }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--textLight); }
+  .legend-swatch { width: 28px; height: 16px; border-radius: 4px; }
+
+  /* Info Cards */
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 30px; }
+  .info-card { background: white; border-radius: 10px; padding: 20px; border: 1px solid var(--border); }
+  .info-card h4 { font-size: 14px; color: var(--sapShellColor); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .info-card p { font-size: 12px; color: var(--textLight); line-height: 1.6; }
+  .info-card code { background: #F0F0F0; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+  .info-card .tag { display: inline-block; background: #E8F4FD; color: var(--sapBrandColor); padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-top: 8px; }
+
+  /* Print */
+  @media print {
+    .nav { display: none; }
+    .header { padding: 20px 30px; }
+    .main { padding: 20px; }
+    .section { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Shared SVG Defs -->
+<svg style="position:absolute;width:0;height:0">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#89919A"/>
+    </marker>
+    <marker id="arrowhead-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0070F2"/>
+    </marker>
+    <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#107E3E"/>
+    </marker>
+    <marker id="arrowhead-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#E9730C"/>
+    </marker>
+  </defs>
+</svg>
+
+<div class="header">
+  <h1>SAP AI Core <span>RAG Assistant</span></h1>
+  <p>Technical Architecture Flowcharts &amp; Component Diagrams</p>
+  <span class="badge">SAP BTP | CAP | Node.js | AI Core</span>
+</div>
+
+<div class="nav">
+  <a href="#high-level" class="active">High-Level Architecture</a>
+  <a href="#rag-pipeline">RAG Pipeline</a>
+  <a href="#request-flow">Request Flow</a>
+  <a href="#data-model">Data Model</a>
+  <a href="#guardrails">Guardrails</a>
+  <a href="#deployment">Deployment</a>
+</div>
+
+<div class="main">
+
+<!-- ========== 1. HIGH-LEVEL ARCHITECTURE ========== -->
+<div class="section" id="high-level">
+  <h2 class="section-title">1. High-Level Architecture</h2>
+  <p class="section-sub">End-to-end system overview showing all major components and their interactions</p>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:#0070F2"></div>Frontend Layer</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#354A5F"></div>Service Layer (CAP)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#107E3E"></div>AI / ML Layer</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#E9730C"></div>Data Layer</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#BB0000"></div>Security Layer</div>
+  </div>
+
+  <svg viewBox="0 0 1100 680">
+    <!-- FRONTEND LAYER -->
+    <g class="fc-card">
+      <rect x="30" y="30" width="240" height="130" fill="white" stroke="#0070F2" stroke-width="2"/>
+      <rect x="30" y="30" width="240" height="32" fill="#0070F2"/>
+      <text x="150" y="51" text-anchor="middle" class="fc-title">Frontend (Fiori Horizon UI)</text>
+      <text x="50" y="82" class="fc-body">app/webapp/index.html</text>
+      <text x="50" y="100" class="fc-body-light">Chat Interface with avatars</text>
+      <text x="50" y="115" class="fc-body-light">Confidence badges &amp; source tags</text>
+      <text x="50" y="130" class="fc-body-light">BPA Governed Actions modal</text>
+      <text x="50" y="145" class="fc-body-light">Demo mode fallback (offline)</text>
+    </g>
+
+    <!-- APPROUTER -->
+    <g class="fc-card">
+      <rect x="310" y="30" width="200" height="130" fill="white" stroke="#BB0000" stroke-width="2"/>
+      <rect x="310" y="30" width="200" height="32" fill="#BB0000"/>
+      <text x="410" y="51" text-anchor="middle" class="fc-title">SAP Approuter</text>
+      <text x="330" y="82" class="fc-body">xs-app.json routing</text>
+      <text x="330" y="100" class="fc-body-light">XSUAA OAuth 2.0 tokens</text>
+      <text x="330" y="115" class="fc-body-light">JWT validation</text>
+      <text x="330" y="130" class="fc-body-light">Role: Admin, Viewer</text>
+      <text x="330" y="145" class="fc-body-light">xs-security.json config</text>
+    </g>
+
+    <!-- SERVICE LAYER -->
+    <g class="fc-card">
+      <rect x="30" y="210" width="480" height="150" fill="white" stroke="#354A5F" stroke-width="2"/>
+      <rect x="30" y="210" width="480" height="32" fill="#354A5F"/>
+      <text x="270" y="231" text-anchor="middle" class="fc-title">CAP Service Layer (Node.js)</text>
+
+      <!-- AskService box -->
+      <rect x="50" y="258" width="200" height="85" fill="#F0F4F8" stroke="#89919A" stroke-width="1" rx="6" ry="6"/>
+      <text x="150" y="278" text-anchor="middle" class="fc-body" font-weight="600">AskService</text>
+      <text x="60" y="296" class="fc-body-light">srv/ask-service.js</text>
+      <text x="60" y="311" class="fc-body-light">POST /api/ask handler</text>
+      <text x="60" y="326" class="fc-body-light">_persistAsync() audit</text>
+
+      <!-- CDS Definition -->
+      <rect x="280" y="258" width="210" height="85" fill="#F0F4F8" stroke="#89919A" stroke-width="1" rx="6" ry="6"/>
+      <text x="385" y="278" text-anchor="middle" class="fc-body" font-weight="600">CDS Service Definition</text>
+      <text x="290" y="296" class="fc-body-light">srv/ask-service.cds</text>
+      <text x="290" y="311" class="fc-body-light">action ask(AskRequest)</text>
+      <text x="290" y="326" class="fc-body-light">returns AskResponse</text>
+    </g>
+
+    <!-- RAG ENGINE -->
+    <g class="fc-card">
+      <rect x="30" y="410" width="480" height="150" fill="white" stroke="#107E3E" stroke-width="2"/>
+      <rect x="30" y="410" width="480" height="32" fill="#107E3E"/>
+      <text x="270" y="431" text-anchor="middle" class="fc-title">RAG Engine &amp; AI Pipeline</text>
+
+      <rect x="50" y="455" width="130" height="55" fill="#E8F5E9" stroke="#107E3E" stroke-width="1" rx="6" ry="6"/>
+      <text x="115" y="475" text-anchor="middle" class="fc-body" font-weight="600">RAG Engine</text>
+      <text x="115" y="495" text-anchor="middle" class="fc-body-light">rag-engine.js</text>
+
+      <rect x="200" y="455" width="130" height="55" fill="#E8F5E9" stroke="#107E3E" stroke-width="1" rx="6" ry="6"/>
+      <text x="265" y="475" text-anchor="middle" class="fc-body" font-weight="600">Vector Store</text>
+      <text x="265" y="495" text-anchor="middle" class="fc-body-light">vector-store.js</text>
+
+      <rect x="350" y="455" width="145" height="55" fill="#E8F5E9" stroke="#107E3E" stroke-width="1" rx="6" ry="6"/>
+      <text x="422" y="475" text-anchor="middle" class="fc-body" font-weight="600">Doc Processor</text>
+      <text x="422" y="495" text-anchor="middle" class="fc-body-light">document-processor.js</text>
+
+      <rect x="50" y="520" width="445" height="28" fill="#FFF3E0" stroke="#E9730C" stroke-width="1" rx="6" ry="6"/>
+      <text x="270" y="539" text-anchor="middle" class="fc-body" font-weight="600" fill="#E9730C">Guardrails Module (guardrails.js) - PII / Topic / Injection / Confidence</text>
+    </g>
+
+    <!-- SAP AI CORE -->
+    <g class="fc-card">
+      <rect x="570" y="210" width="240" height="130" fill="white" stroke="#107E3E" stroke-width="2"/>
+      <rect x="570" y="210" width="240" height="32" fill="#107E3E"/>
+      <text x="690" y="231" text-anchor="middle" class="fc-title">SAP AI Core</text>
+      <text x="590" y="262" class="fc-body">Generative AI Hub</text>
+      <text x="590" y="280" class="fc-body-light">LLM Inference (GPT-4 / Claude)</text>
+      <text x="590" y="295" class="fc-body-light">Text Embedding Models</text>
+      <text x="590" y="310" class="fc-body-light">REST API /v2/deployments</text>
+      <text x="590" y="325" class="fc-body-light">SAP BTP Destination binding</text>
+    </g>
+
+    <!-- DATABASE -->
+    <g class="fc-card">
+      <rect x="570" y="410" width="240" height="150" fill="white" stroke="#E9730C" stroke-width="2"/>
+      <rect x="570" y="410" width="240" height="32" fill="#E9730C"/>
+      <text x="690" y="431" text-anchor="middle" class="fc-title">Data Layer</text>
+
+      <rect x="590" y="455" width="200" height="28" fill="#FFF3E0" stroke="#E9730C" stroke-width="1" rx="4" ry="4"/>
+      <text x="690" y="474" text-anchor="middle" class="fc-body">SQLite (Dev) / HANA (Prod)</text>
+
+      <rect x="590" y="492" width="95" height="22" fill="#F0F0F0" rx="4" ry="4"/>
+      <text x="637" y="507" text-anchor="middle" class="fc-body-light">Questions</text>
+      <rect x="695" y="492" width="95" height="22" fill="#F0F0F0" rx="4" ry="4"/>
+      <text x="742" y="507" text-anchor="middle" class="fc-body-light">Answers</text>
+      <rect x="590" y="522" width="95" height="22" fill="#F0F0F0" rx="4" ry="4"/>
+      <text x="637" y="537" text-anchor="middle" class="fc-body-light">KnowledgeBase</text>
+      <rect x="695" y="522" width="95" height="22" fill="#F0F0F0" rx="4" ry="4"/>
+      <text x="742" y="537" text-anchor="middle" class="fc-body-light">AuditLog</text>
+    </g>
+
+    <!-- KNOWLEDGE BASE JSON -->
+    <g class="fc-card">
+      <rect x="860" y="410" width="210" height="90" fill="white" stroke="#D08014" stroke-width="2"/>
+      <rect x="860" y="410" width="210" height="32" fill="#D08014"/>
+      <text x="965" y="431" text-anchor="middle" class="fc-title">Knowledge Base</text>
+      <text x="880" y="462" class="fc-body">data/knowledge-base.json</text>
+      <text x="880" y="480" class="fc-body-light">4 HR policy documents</text>
+      <text x="880" y="495" class="fc-body-light">20 sections, chunked at 500c</text>
+    </g>
+
+    <!-- BTP Platform -->
+    <g class="fc-card">
+      <rect x="860" y="210" width="210" height="130" fill="white" stroke="#6A6D70" stroke-width="2"/>
+      <rect x="860" y="210" width="210" height="32" fill="#6A6D70"/>
+      <text x="965" y="231" text-anchor="middle" class="fc-title">SAP BTP Platform</text>
+      <text x="880" y="262" class="fc-body-light">Cloud Foundry Runtime</text>
+      <text x="880" y="280" class="fc-body-light">XSUAA Service</text>
+      <text x="880" y="298" class="fc-body-light">Destination Service</text>
+      <text x="880" y="316" class="fc-body-light">HANA Cloud</text>
+      <text x="880" y="334" class="fc-body-light">mta.yaml deployment</text>
+    </g>
+
+    <!-- ARROWS -->
+    <!-- Frontend -> Approuter -->
+    <path d="M270,95 L310,95" class="fc-arrow"/>
+    <text x="285" y="88" class="fc-label">HTTPS</text>
+
+    <!-- Frontend -> Service Layer -->
+    <path d="M150,160 L150,210" class="fc-arrow"/>
+    <text x="155" y="190" class="fc-label">POST /api/ask</text>
+
+    <!-- Service -> RAG Engine -->
+    <path d="M270,360 L270,410" class="fc-arrow-highlight"/>
+    <text x="275" y="390" class="fc-label" fill="#0070F2">process(question)</text>
+
+    <!-- Service -> AI Core -->
+    <path d="M510,285 L570,285" class="fc-arrow"/>
+    <text x="520" y="278" class="fc-label">REST</text>
+
+    <!-- Service -> Database -->
+    <path d="M510,340 L690,410" class="fc-arrow"/>
+    <text x="580" y="375" class="fc-label">_persistAsync()</text>
+
+    <!-- RAG -> Vector Store internal -->
+    <!-- Doc Processor -> Knowledge Base -->
+    <path d="M495,480 Q530,480 530,450 Q530,450 860,450" class="fc-arrow"/>
+    <text x="640" y="445" class="fc-label">loadKnowledgeBase()</text>
+
+    <!-- AI Core -> BTP -->
+    <path d="M810,275 L860,275" class="fc-arrow"/>
+
+    <!-- RAG -> AI Core -->
+    <path d="M115,455 Q115,340 570,260" class="fc-arrow" style="stroke:#107E3E;marker-end:url(#arrowhead-green)"/>
+    <text x="300" y="368" class="fc-label" fill="#107E3E">_callLLM(prompt)</text>
+  </svg>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <h4>Frontend Layer</h4>
+      <p>Single-page Fiori Horizon UI at <code>/app/webapp/</code>. Uses vanilla JS with SAP Horizon CSS variables. Includes a <strong>demo mode</strong> with 10 pre-built answers when backend is unavailable (e.g., GitHub Pages).</p>
+      <span class="tag">Fiori Horizon Theme</span>
+    </div>
+    <div class="info-card">
+      <h4>CAP Service Layer</h4>
+      <p><code>AskService</code> extends <code>cds.ApplicationService</code>. Registers <code>on('ask')</code> handler that orchestrates the RAG pipeline. Persistence is non-blocking via <code>_persistAsync()</code>.</p>
+      <span class="tag">@sap/cds v8+</span>
+    </div>
+    <div class="info-card">
+      <h4>AI Pipeline</h4>
+      <p>6-step RAG process: Pre-process &rarr; Embed &rarr; Search &rarr; Prompt &rarr; LLM &rarr; Post-process. Demo uses character-frequency embeddings; production uses SAP AI Core embedding models.</p>
+      <span class="tag">384-dimensional vectors</span>
+    </div>
+    <div class="info-card">
+      <h4>Data Layer</h4>
+      <p>CDS-modeled entities deployed to SQLite (dev) or SAP HANA Cloud (prod). 4 entities: <code>KnowledgeBase</code>, <code>Questions</code>, <code>Answers</code>, <code>AuditLog</code>.</p>
+      <span class="tag">@cap-js/sqlite</span>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 2. RAG PIPELINE ========== -->
+<div class="section" id="rag-pipeline">
+  <h2 class="section-title">2. RAG Pipeline - Step by Step</h2>
+  <p class="section-sub">The 6-step Retrieval-Augmented Generation pipeline inside <code>rag-engine.js</code></p>
+
+  <svg viewBox="0 0 1100 520">
+    <!-- Step 1: Pre-Process -->
+    <g class="fc-card">
+      <rect x="30" y="30" width="160" height="180" fill="white" stroke="#BB0000" stroke-width="2"/>
+      <rect x="30" y="30" width="160" height="32" fill="#BB0000"/>
+      <text x="110" y="51" text-anchor="middle" class="fc-title">1. Pre-Process</text>
+      <text x="110" y="75" text-anchor="middle" class="fc-body" font-weight="600">guardrails.preProcess()</text>
+      <line x1="50" y1="85" x2="170" y2="85" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="50" y="105" class="fc-body-light">Validate input text</text>
+      <text x="50" y="122" class="fc-body-light">Detect &amp; mask PII</text>
+      <text x="50" y="139" class="fc-body-light">Check topic boundary</text>
+      <text x="50" y="156" class="fc-body-light">Block injections</text>
+      <rect x="50" y="170" width="120" height="22" fill="#FFEBEE" rx="4" ry="4"/>
+      <text x="110" y="185" text-anchor="middle" class="fc-body-light" fill="#BB0000">Block if unsafe</text>
+    </g>
+
+    <!-- Step 2: Embed -->
+    <g class="fc-card">
+      <rect x="220" y="30" width="160" height="180" fill="white" stroke="#0854A0" stroke-width="2"/>
+      <rect x="220" y="30" width="160" height="32" fill="#0854A0"/>
+      <text x="300" y="51" text-anchor="middle" class="fc-title">2. Embed</text>
+      <text x="300" y="75" text-anchor="middle" class="fc-body" font-weight="600">_generateEmbedding()</text>
+      <line x1="240" y1="85" x2="360" y2="85" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="240" y="105" class="fc-body-light">Convert question to</text>
+      <text x="240" y="122" class="fc-body-light">384-dim float vector</text>
+      <text x="240" y="145" class="fc-body-light">Demo: char frequency</text>
+      <text x="240" y="162" class="fc-body-light">+ bigram hashing</text>
+      <rect x="240" y="175" width="120" height="22" fill="#E8F4FD" rx="4" ry="4"/>
+      <text x="300" y="190" text-anchor="middle" class="fc-body-light" fill="#0854A0">Prod: AI Core API</text>
+    </g>
+
+    <!-- Step 3: Search -->
+    <g class="fc-card">
+      <rect x="410" y="30" width="160" height="180" fill="white" stroke="#107E3E" stroke-width="2"/>
+      <rect x="410" y="30" width="160" height="32" fill="#107E3E"/>
+      <text x="490" y="51" text-anchor="middle" class="fc-title">3. Search</text>
+      <text x="490" y="75" text-anchor="middle" class="fc-body" font-weight="600">vectorStore.search()</text>
+      <line x1="430" y1="85" x2="550" y2="85" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="430" y="105" class="fc-body-light">Cosine similarity</text>
+      <text x="430" y="122" class="fc-body-light">against all docs</text>
+      <text x="430" y="145" class="fc-body-light">Return top-K (5)</text>
+      <text x="430" y="162" class="fc-body-light">with scores 0-1</text>
+      <rect x="430" y="175" width="120" height="22" fill="#E8F5E9" rx="4" ry="4"/>
+      <text x="490" y="190" text-anchor="middle" class="fc-body-light" fill="#107E3E">Prod: HANA Vector</text>
+    </g>
+
+    <!-- Step 4: Prompt -->
+    <g class="fc-card">
+      <rect x="600" y="30" width="160" height="180" fill="white" stroke="#E9730C" stroke-width="2"/>
+      <rect x="600" y="30" width="160" height="32" fill="#E9730C"/>
+      <text x="680" y="51" text-anchor="middle" class="fc-title">4. Build Prompt</text>
+      <text x="680" y="75" text-anchor="middle" class="fc-body" font-weight="600">_buildPrompt()</text>
+      <line x1="620" y1="85" x2="740" y2="85" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="620" y="105" class="fc-body-light">System instruction</text>
+      <text x="620" y="122" class="fc-body-light">+ retrieved context</text>
+      <text x="620" y="139" class="fc-body-light">+ user question</text>
+      <text x="620" y="162" class="fc-body-light">Context window:</text>
+      <text x="620" y="178" class="fc-body-light">max 3000 tokens</text>
+    </g>
+
+    <!-- Step 5: LLM -->
+    <g class="fc-card">
+      <rect x="790" y="30" width="160" height="180" fill="white" stroke="#286EB4" stroke-width="2"/>
+      <rect x="790" y="30" width="160" height="32" fill="#286EB4"/>
+      <text x="870" y="51" text-anchor="middle" class="fc-title">5. LLM Call</text>
+      <text x="870" y="75" text-anchor="middle" class="fc-body" font-weight="600">_callLLM()</text>
+      <line x1="810" y1="85" x2="930" y2="85" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="810" y="105" class="fc-body-light">Send to SAP AI Core</text>
+      <text x="810" y="122" class="fc-body-light">Generative AI Hub</text>
+      <text x="810" y="145" class="fc-body-light">Returns: answer text</text>
+      <text x="810" y="162" class="fc-body-light">+ token count</text>
+      <text x="810" y="178" class="fc-body-light">+ model ID</text>
+    </g>
+
+    <!-- Step 6: Post-Process -->
+    <g class="fc-card">
+      <rect x="30" y="290" width="920" height="100" fill="white" stroke="#1C857A" stroke-width="2"/>
+      <rect x="30" y="290" width="920" height="32" fill="#1C857A"/>
+      <text x="490" y="311" text-anchor="middle" class="fc-title">6. Post-Process &amp; Return - guardrails.postProcess()</text>
+
+      <rect x="50" y="340" width="180" height="35" fill="#E0F2F1" stroke="#1C857A" stroke-width="1" rx="6" ry="6"/>
+      <text x="140" y="362" text-anchor="middle" class="fc-body">Validate output safety</text>
+
+      <rect x="260" y="340" width="180" height="35" fill="#E0F2F1" stroke="#1C857A" stroke-width="1" rx="6" ry="6"/>
+      <text x="350" y="362" text-anchor="middle" class="fc-body">Check confidence >= 0.6</text>
+
+      <rect x="470" y="340" width="180" height="35" fill="#E0F2F1" stroke="#1C857A" stroke-width="1" rx="6" ry="6"/>
+      <text x="560" y="362" text-anchor="middle" class="fc-body">Add low-confidence warning</text>
+
+      <rect x="680" y="340" width="250" height="35" fill="#FFF3E0" stroke="#E9730C" stroke-width="1" rx="6" ry="6"/>
+      <text x="805" y="362" text-anchor="middle" class="fc-body" fill="#E9730C">Return {answer, confidence, sources}</text>
+    </g>
+
+    <!-- Arrows between steps -->
+    <path d="M190,120 L220,120" class="fc-arrow"/>
+    <path d="M380,120 L410,120" class="fc-arrow"/>
+    <path d="M570,120 L600,120" class="fc-arrow"/>
+    <path d="M760,120 L790,120" class="fc-arrow"/>
+    <!-- Step 5 down to Step 6 -->
+    <path d="M870,210 L870,250 Q870,270 490,290" class="fc-arrow"/>
+
+    <!-- DATA FLOW DETAIL below -->
+    <g>
+      <rect x="30" y="420" width="920" height="85" fill="white" stroke="#D9D9D9" stroke-width="1" rx="10" ry="10"/>
+      <text x="490" y="445" text-anchor="middle" class="fc-body" font-weight="600" fill="#354A5F">Data Flow Through Pipeline</text>
+
+      <!-- Flow boxes -->
+      <rect x="50" y="460" width="100" height="30" fill="#FFEBEE" rx="4" ry="4"/>
+      <text x="100" y="479" text-anchor="middle" class="fc-body-light">"How many..."</text>
+
+      <text x="163" y="479" class="fc-label">&rarr;</text>
+
+      <rect x="180" y="460" width="100" height="30" fill="#E8F4FD" rx="4" ry="4"/>
+      <text x="230" y="479" text-anchor="middle" class="fc-body-light">[0.23, 0.81...]</text>
+
+      <text x="293" y="479" class="fc-label">&rarr;</text>
+
+      <rect x="310" y="460" width="130" height="30" fill="#E8F5E9" rx="4" ry="4"/>
+      <text x="375" y="479" text-anchor="middle" class="fc-body-light">Top 5 docs (0.87)</text>
+
+      <text x="453" y="479" class="fc-label">&rarr;</text>
+
+      <rect x="470" y="460" width="130" height="30" fill="#FFF3E0" rx="4" ry="4"/>
+      <text x="535" y="479" text-anchor="middle" class="fc-body-light">System + Context</text>
+
+      <text x="613" y="479" class="fc-label">&rarr;</text>
+
+      <rect x="630" y="460" width="130" height="30" fill="#E8F4FD" rx="4" ry="4"/>
+      <text x="695" y="479" text-anchor="middle" class="fc-body-light">LLM Response</text>
+
+      <text x="773" y="479" class="fc-label">&rarr;</text>
+
+      <rect x="790" y="460" width="140" height="30" fill="#E0F2F1" rx="4" ry="4"/>
+      <text x="860" y="479" text-anchor="middle" class="fc-body-light">Validated Answer</text>
+    </g>
+  </svg>
+</div>
+
+<!-- ========== 3. REQUEST FLOW ========== -->
+<div class="section" id="request-flow">
+  <h2 class="section-title">3. Request / Response Flow</h2>
+  <p class="section-sub">Complete lifecycle of a user question from browser to database</p>
+
+  <svg viewBox="0 0 1100 600">
+    <!-- Swimlanes -->
+    <rect x="0" y="0" width="1100" height="60" fill="#F0F4F8"/>
+    <rect x="0" y="60" width="1100" height="120" fill="white"/>
+    <rect x="0" y="180" width="1100" height="120" fill="#F8F8F8"/>
+    <rect x="0" y="300" width="1100" height="120" fill="white"/>
+    <rect x="0" y="420" width="1100" height="120" fill="#F8F8F8"/>
+
+    <!-- Lane labels -->
+    <text x="20" y="35" class="fc-body" font-weight="600" fill="#354A5F">BROWSER</text>
+    <text x="20" y="50" class="fc-body-light">index.html</text>
+    <text x="20" y="155" class="fc-body" font-weight="600" fill="#354A5F">CAP SERVICE</text>
+    <text x="20" y="170" class="fc-body-light">ask-service.js</text>
+    <text x="20" y="275" class="fc-body" font-weight="600" fill="#107E3E">RAG ENGINE</text>
+    <text x="20" y="290" class="fc-body-light">rag-engine.js</text>
+    <text x="20" y="395" class="fc-body" font-weight="600" fill="#E9730C">GUARDRAILS</text>
+    <text x="20" y="410" class="fc-body-light">guardrails.js</text>
+    <text x="20" y="510" class="fc-body" font-weight="600" fill="#0854A0">DATABASE</text>
+    <text x="20" y="525" class="fc-body-light">SQLite / HANA</text>
+
+    <!-- Step boxes -->
+    <!-- 1. User types question -->
+    <rect x="150" y="15" width="130" height="35" fill="#0070F2" rx="6" ry="6"/>
+    <text x="215" y="37" text-anchor="middle" class="fc-title" font-size="11">User types question</text>
+
+    <!-- 2. POST /api/ask -->
+    <path d="M215,50 L215,85" class="fc-arrow"/>
+    <rect x="150" y="85" width="130" height="35" fill="#354A5F" rx="6" ry="6"/>
+    <text x="215" y="107" text-anchor="middle" class="fc-title" font-size="11">POST /api/ask</text>
+
+    <!-- 3. Extract params -->
+    <path d="M280,102 L330,102" class="fc-arrow"/>
+    <rect x="330" y="85" width="140" height="35" fill="white" stroke="#354A5F" stroke-width="1.5" rx="6" ry="6"/>
+    <text x="400" y="107" text-anchor="middle" class="fc-body">Extract question, ID</text>
+
+    <!-- 4. ragEngine.process() -->
+    <path d="M400,120 L400,235" class="fc-arrow"/>
+    <rect x="330" y="235" width="140" height="35" fill="#107E3E" rx="6" ry="6"/>
+    <text x="400" y="257" text-anchor="middle" class="fc-title" font-size="11">process(question)</text>
+
+    <!-- 5. preProcess -->
+    <path d="M400,270 L400,355" class="fc-arrow"/>
+    <rect x="330" y="355" width="140" height="35" fill="#BB0000" rx="6" ry="6"/>
+    <text x="400" y="377" text-anchor="middle" class="fc-title" font-size="11">preProcess()</text>
+
+    <!-- 5b. PII + Topic + Input validation -->
+    <path d="M470,372 L530,372" class="fc-arrow"/>
+    <rect x="530" y="355" width="110" height="35" fill="white" stroke="#BB0000" stroke-width="1.5" rx="6" ry="6"/>
+    <text x="585" y="374" text-anchor="middle" class="fc-body">PII mask</text>
+    <text x="585" y="386" text-anchor="middle" class="fc-body-light">topic check</text>
+
+    <!-- 6. Embed + Search -->
+    <path d="M470,252 L530,252" class="fc-arrow"/>
+    <rect x="530" y="235" width="110" height="35" fill="white" stroke="#107E3E" stroke-width="1.5" rx="6" ry="6"/>
+    <text x="585" y="253" text-anchor="middle" class="fc-body">Embed &rarr; Search</text>
+    <text x="585" y="265" text-anchor="middle" class="fc-body-light">cosine similarity</text>
+
+    <!-- 7. Build Prompt + LLM -->
+    <path d="M640,252 L690,252" class="fc-arrow"/>
+    <rect x="690" y="235" width="130" height="35" fill="white" stroke="#107E3E" stroke-width="1.5" rx="6" ry="6"/>
+    <text x="755" y="253" text-anchor="middle" class="fc-body">Prompt &rarr; LLM</text>
+    <text x="755" y="265" text-anchor="middle" class="fc-body-light">SAP AI Core</text>
+
+    <!-- 8. postProcess -->
+    <path d="M755,270 L755,355" class="fc-arrow"/>
+    <rect x="690" y="355" width="130" height="35" fill="#1C857A" rx="6" ry="6"/>
+    <text x="755" y="377" text-anchor="middle" class="fc-title" font-size="11">postProcess()</text>
+
+    <!-- 9. Return to service -->
+    <path d="M820,372 L890,372 Q910,372 910,320 Q910,150 890,130 L890,102" class="fc-arrow"/>
+    <text x="920" y="240" class="fc-label" transform="rotate(90, 920, 240)">result</text>
+
+    <!-- 10. Persist async -->
+    <rect x="830" y="85" width="140" height="35" fill="white" stroke="#354A5F" stroke-width="1.5" rx="6" ry="6"/>
+    <text x="900" y="103" text-anchor="middle" class="fc-body">_persistAsync()</text>
+    <text x="900" y="115" text-anchor="middle" class="fc-body-light">non-blocking</text>
+
+    <!-- 11. DB Insert -->
+    <path d="M900,120 L900,460" class="fc-arrow"/>
+    <rect x="830" y="460" width="140" height="50" fill="white" stroke="#0854A0" stroke-width="1.5" rx="6" ry="6"/>
+    <text x="900" y="480" text-anchor="middle" class="fc-body">INSERT Questions</text>
+    <text x="900" y="493" text-anchor="middle" class="fc-body">INSERT Answers</text>
+    <text x="900" y="506" text-anchor="middle" class="fc-body-light">INSERT AuditLog</text>
+
+    <!-- 12. Response to browser -->
+    <rect x="530" y="85" width="140" height="35" fill="white" stroke="#354A5F" stroke-width="1.5" rx="6" ry="6"/>
+    <text x="600" y="103" text-anchor="middle" class="fc-body">{answer, confidence,</text>
+    <text x="600" y="115" text-anchor="middle" class="fc-body-light">sources, questionId}</text>
+
+    <path d="M530,102 L470,102" class="fc-arrow" style="stroke:var(--sapBrandColor);marker-end:url(#arrowhead-blue)"/>
+
+    <!-- Back to browser -->
+    <path d="M600,85 L600,35 L280,35" class="fc-arrow" style="stroke:var(--sapBrandColor);marker-end:url(#arrowhead-blue)"/>
+    <text x="440" y="28" class="fc-label" fill="#0070F2">JSON Response</text>
+
+    <!-- 13. Render -->
+    <rect x="150" y="540" width="850" height="40" fill="#F0F4F8" stroke="#D9D9D9" stroke-width="1" rx="6" ry="6"/>
+    <text x="575" y="565" text-anchor="middle" class="fc-body" fill="#354A5F">Browser renders: chat bubble + confidence badge (High/Medium/Low) + source document tags + timestamp</text>
+  </svg>
+</div>
+
+<!-- ========== 4. DATA MODEL ========== -->
+<div class="section" id="data-model">
+  <h2 class="section-title">4. Data Model (CDS Schema)</h2>
+  <p class="section-sub">Entity-Relationship diagram defined in <code>db/schema.cds</code></p>
+
+  <svg viewBox="0 0 1100 420">
+    <!-- Questions Entity -->
+    <g class="fc-card">
+      <rect x="30" y="30" width="240" height="220" fill="white" stroke="#354A5F" stroke-width="2"/>
+      <rect x="30" y="30" width="240" height="32" fill="#354A5F"/>
+      <text x="150" y="51" text-anchor="middle" class="fc-title">Questions</text>
+      <text x="50" y="80" class="fc-body" fill="#BB0000" font-weight="600">ID : UUID (PK)</text>
+      <text x="50" y="100" class="fc-body">text : String(2000)</text>
+      <text x="50" y="120" class="fc-body">userId : String</text>
+      <text x="50" y="140" class="fc-body">sessionId : String</text>
+      <text x="50" y="160" class="fc-body">status : String(16)</text>
+      <line x1="50" y1="175" x2="250" y2="175" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="50" y="195" class="fc-body-light">Associations:</text>
+      <text x="50" y="215" class="fc-body" fill="#0070F2">answer &rarr; Answers (1:1)</text>
+      <text x="50" y="235" class="fc-body-light">cds.managed timestamps</text>
+    </g>
+
+    <!-- Answers Entity -->
+    <g class="fc-card">
+      <rect x="330" y="30" width="250" height="240" fill="white" stroke="#107E3E" stroke-width="2"/>
+      <rect x="330" y="30" width="250" height="32" fill="#107E3E"/>
+      <text x="455" y="51" text-anchor="middle" class="fc-title">Answers</text>
+      <text x="350" y="80" class="fc-body" fill="#BB0000" font-weight="600">ID : UUID (PK)</text>
+      <text x="350" y="100" class="fc-body">text : String(5000)</text>
+      <text x="350" y="120" class="fc-body" fill="#0070F2">question_ID : UUID (FK)</text>
+      <text x="350" y="140" class="fc-body">confidence : Decimal(5,4)</text>
+      <text x="350" y="160" class="fc-body">sourceDocs : String(5000)</text>
+      <text x="350" y="180" class="fc-body">modelId : String</text>
+      <text x="350" y="200" class="fc-body">tokenCount : Integer</text>
+      <text x="350" y="220" class="fc-body">responseTimeMs : Integer</text>
+      <line x1="350" y1="233" x2="560" y2="233" stroke="#E0E0E0" stroke-width="1"/>
+      <text x="350" y="255" class="fc-body-light">cds.managed timestamps</text>
+    </g>
+
+    <!-- Association arrow Questions -> Answers -->
+    <path d="M270,140 L330,140" class="fc-arrow" style="stroke:#0070F2;stroke-width:2.5;marker-end:url(#arrowhead-blue)"/>
+    <text x="285" y="133" class="fc-label" fill="#0070F2">1:1</text>
+
+    <!-- KnowledgeBase Entity -->
+    <g class="fc-card">
+      <rect x="640" y="30" width="240" height="220" fill="white" stroke="#E9730C" stroke-width="2"/>
+      <rect x="640" y="30" width="240" height="32" fill="#E9730C"/>
+      <text x="760" y="51" text-anchor="middle" class="fc-title">KnowledgeBase</text>
+      <text x="660" y="80" class="fc-body" fill="#BB0000" font-weight="600">ID : UUID (PK)</text>
+      <text x="660" y="100" class="fc-body">title : String(500)</text>
+      <text x="660" y="120" class="fc-body">content : String(5000)</text>
+      <text x="660" y="140" class="fc-body">source : String</text>
+      <text x="660" y="160" class="fc-body">category : String</text>
+      <text x="660" y="180" class="fc-body">embedding : String(5000)</text>
+      <text x="660" y="200" class="fc-body">chunkIndex : Integer</text>
+      <text x="660" y="220" class="fc-body">metadata : String(2000)</text>
+    </g>
+
+    <!-- AuditLog Entity -->
+    <g class="fc-card">
+      <rect x="330" y="310" width="330" height="100" fill="white" stroke="#BB0000" stroke-width="2"/>
+      <rect x="330" y="310" width="330" height="32" fill="#BB0000"/>
+      <text x="495" y="331" text-anchor="middle" class="fc-title">AuditLog</text>
+      <text x="350" y="360" class="fc-body" fill="#BB0000" font-weight="600">ID : UUID (PK)</text>
+      <text x="350" y="380" class="fc-body">action : String &nbsp; userId : String &nbsp; questionId : String</text>
+      <text x="350" y="400" class="fc-body">details : String &nbsp; piiDetected : Boolean &nbsp; guardrailHit : Boolean &nbsp; ipAddress : String</text>
+    </g>
+
+    <!-- Service -> AuditLog -->
+    <path d="M150,250 L150,360 L330,360" class="fc-arrow" style="stroke:#BB0000;stroke-dasharray:5 3;marker-end:url(#arrowhead)"/>
+    <text x="190" y="353" class="fc-label">writes audit entries</text>
+  </svg>
+</div>
+
+<!-- ========== 5. GUARDRAILS ========== -->
+<div class="section" id="guardrails">
+  <h2 class="section-title">5. Responsible AI Guardrails</h2>
+  <p class="section-sub">Security and compliance checks in <code>srv/lib/guardrails.js</code></p>
+
+  <svg viewBox="0 0 1100 480">
+    <!-- Input side -->
+    <rect x="30" y="30" width="500" height="420" fill="#FFF5F5" stroke="#BB0000" stroke-width="1" rx="12" ry="12"/>
+    <text x="280" y="60" text-anchor="middle" class="fc-body" font-weight="700" fill="#BB0000" font-size="15">PRE-PROCESSING (Input Guard)</text>
+    <text x="280" y="78" text-anchor="middle" class="fc-body-light">guardrails.preProcess(question)</text>
+
+    <!-- PII Detection -->
+    <g class="fc-card">
+      <rect x="50" y="100" width="220" height="150" fill="white" stroke="#BB0000" stroke-width="1.5"/>
+      <rect x="50" y="100" width="220" height="28" fill="#BB0000"/>
+      <text x="160" y="119" text-anchor="middle" class="fc-title" font-size="11">PII Detection &amp; Masking</text>
+      <text x="70" y="146" class="fc-body-light">7 Regex Patterns:</text>
+      <text x="70" y="163" class="fc-body">Email addresses</text>
+      <text x="70" y="178" class="fc-body">Phone numbers (intl/local)</text>
+      <text x="70" y="193" class="fc-body">SSN (XXX-XX-XXXX)</text>
+      <text x="70" y="208" class="fc-body">Credit card numbers</text>
+      <text x="70" y="223" class="fc-body">Employee IDs (E-XXXXX)</text>
+      <text x="70" y="238" class="fc-body">Passport numbers</text>
+    </g>
+
+    <!-- Topic Boundary -->
+    <g class="fc-card">
+      <rect x="290" y="100" width="220" height="150" fill="white" stroke="#E9730C" stroke-width="1.5"/>
+      <rect x="290" y="100" width="220" height="28" fill="#E9730C"/>
+      <text x="400" y="119" text-anchor="middle" class="fc-title" font-size="11">Topic Boundary Check</text>
+      <text x="310" y="146" class="fc-body-light">12 Allowed Domains:</text>
+      <text x="310" y="163" class="fc-body">Leave, Travel, Expense</text>
+      <text x="310" y="178" class="fc-body">Onboarding, HR Policies</text>
+      <text x="310" y="193" class="fc-body">Benefits, Compensation</text>
+      <text x="310" y="208" class="fc-body">Performance Management</text>
+      <text x="310" y="223" class="fc-body">SAP Systems, IT &amp; Access</text>
+      <text x="310" y="238" class="fc-body">Learning &amp; Development</text>
+    </g>
+
+    <!-- Input Validation -->
+    <g class="fc-card">
+      <rect x="50" y="270" width="460" height="160" fill="white" stroke="#AA0808" stroke-width="1.5"/>
+      <rect x="50" y="270" width="460" height="28" fill="#AA0808"/>
+      <text x="280" y="289" text-anchor="middle" class="fc-title" font-size="11">Input Validation (Injection Protection)</text>
+
+      <rect x="70" y="310" width="200" height="50" fill="#FFEBEE" rx="6" ry="6"/>
+      <text x="170" y="330" text-anchor="middle" class="fc-body" font-weight="600">Prompt Injection</text>
+      <text x="170" y="348" text-anchor="middle" class="fc-body-light">ignore instructions, role change</text>
+
+      <rect x="290" y="310" width="200" height="50" fill="#FFEBEE" rx="6" ry="6"/>
+      <text x="390" y="330" text-anchor="middle" class="fc-body" font-weight="600">Code Injection</text>
+      <text x="390" y="348" text-anchor="middle" class="fc-body-light">SQL, XSS, script tags</text>
+
+      <rect x="70" y="375" width="200" height="40" fill="#FFEBEE" rx="6" ry="6"/>
+      <text x="170" y="400" text-anchor="middle" class="fc-body">System prompt extraction</text>
+
+      <rect x="290" y="375" width="200" height="40" fill="#FFEBEE" rx="6" ry="6"/>
+      <text x="390" y="400" text-anchor="middle" class="fc-body">Role manipulation attacks</text>
+    </g>
+
+    <!-- Output side -->
+    <rect x="570" y="30" width="500" height="420" fill="#F0FFF4" stroke="#107E3E" stroke-width="1" rx="12" ry="12"/>
+    <text x="820" y="60" text-anchor="middle" class="fc-body" font-weight="700" fill="#107E3E" font-size="15">POST-PROCESSING (Output Guard)</text>
+    <text x="820" y="78" text-anchor="middle" class="fc-body-light">guardrails.postProcess(answer, confidence)</text>
+
+    <!-- Output Validation -->
+    <g class="fc-card">
+      <rect x="590" y="100" width="220" height="120" fill="white" stroke="#107E3E" stroke-width="1.5"/>
+      <rect x="590" y="100" width="220" height="28" fill="#107E3E"/>
+      <text x="700" y="119" text-anchor="middle" class="fc-title" font-size="11">Output Validation</text>
+      <text x="610" y="146" class="fc-body-light">Checks for leaks:</text>
+      <text x="610" y="166" class="fc-body">System prompt exposure</text>
+      <text x="610" y="186" class="fc-body">API key / credential leak</text>
+      <text x="610" y="206" class="fc-body">Internal path disclosure</text>
+    </g>
+
+    <!-- Confidence Check -->
+    <g class="fc-card">
+      <rect x="830" y="100" width="220" height="120" fill="white" stroke="#0854A0" stroke-width="1.5"/>
+      <rect x="830" y="100" width="220" height="28" fill="#0854A0"/>
+      <text x="940" y="119" text-anchor="middle" class="fc-title" font-size="11">Confidence Threshold</text>
+      <text x="850" y="150" class="fc-body">Threshold: 0.6 (60%)</text>
+      <line x1="850" y1="165" x2="1030" y2="165" stroke="#E0E0E0" stroke-width="1"/>
+      <rect x="850" y="175" width="60" height="20" fill="#107E3E" rx="4" ry="4"/>
+      <text x="880" y="189" text-anchor="middle" class="fc-title" font-size="9">High</text>
+      <text x="920" y="190" class="fc-body-light">>= 0.8</text>
+      <rect x="850" y="200" width="60" height="20" fill="#E9730C" rx="4" ry="4"/>
+      <text x="880" y="214" text-anchor="middle" class="fc-title" font-size="9">Medium</text>
+      <text x="920" y="215" class="fc-body-light">>= 0.6</text>
+    </g>
+
+    <!-- Audit Trail -->
+    <g class="fc-card">
+      <rect x="590" y="260" width="460" height="170" fill="white" stroke="#475E75" stroke-width="1.5"/>
+      <rect x="590" y="260" width="460" height="28" fill="#475E75"/>
+      <text x="820" y="279" text-anchor="middle" class="fc-title" font-size="11">Audit Trail - buildAuditEntry()</text>
+
+      <text x="610" y="308" class="fc-body" font-weight="600">Every request is logged:</text>
+      <text x="610" y="330" class="fc-body">action: "ASK"</text>
+      <text x="610" y="350" class="fc-body">userId, questionId, question text</text>
+      <text x="610" y="370" class="fc-body">confidence score, modelId</text>
+      <text x="610" y="390" class="fc-body">piiDetected: true/false</text>
+      <text x="610" y="410" class="fc-body">guardrailHit: true/false</text>
+      <text x="830" y="330" class="fc-body">topicCheck result</text>
+      <text x="830" y="350" class="fc-body">source documents used</text>
+      <text x="830" y="370" class="fc-body">piiReport details</text>
+      <text x="830" y="390" class="fc-body-light">Stored in AuditLog entity</text>
+    </g>
+  </svg>
+</div>
+
+<!-- ========== 6. DEPLOYMENT ========== -->
+<div class="section" id="deployment">
+  <h2 class="section-title">6. Deployment Architecture (SAP BTP)</h2>
+  <p class="section-sub">Multi-Target Application deployment on Cloud Foundry via <code>mta.yaml</code></p>
+
+  <svg viewBox="0 0 1100 460">
+    <!-- BTP Container -->
+    <rect x="30" y="30" width="1040" height="400" fill="#F0F4F8" stroke="#354A5F" stroke-width="2" rx="12" ry="12"/>
+    <text x="550" y="58" text-anchor="middle" class="fc-body" font-weight="700" fill="#354A5F" font-size="16">SAP Business Technology Platform (Cloud Foundry)</text>
+
+    <!-- MTA Build -->
+    <rect x="60" y="80" width="200" height="70" fill="white" stroke="#6A6D70" stroke-width="1.5" rx="8" ry="8"/>
+    <text x="160" y="105" text-anchor="middle" class="fc-body" font-weight="600">MTA Build</text>
+    <text x="160" y="125" text-anchor="middle" class="fc-body-light">mbt build &rarr; .mtar archive</text>
+    <text x="160" y="140" text-anchor="middle" class="fc-body-light">cf deploy *.mtar</text>
+
+    <!-- Approuter Module -->
+    <g class="fc-card">
+      <rect x="60" y="180" width="200" height="110" fill="white" stroke="#0070F2" stroke-width="2"/>
+      <rect x="60" y="180" width="200" height="28" fill="#0070F2"/>
+      <text x="160" y="199" text-anchor="middle" class="fc-title" font-size="11">Approuter Module</text>
+      <text x="80" y="225" class="fc-body-light">Entry point for users</text>
+      <text x="80" y="245" class="fc-body-light">Serves /webapp/ UI</text>
+      <text x="80" y="265" class="fc-body-light">Routes /api/* to srv</text>
+      <text x="80" y="280" class="fc-body-light">XSUAA token handling</text>
+    </g>
+
+    <!-- SRV Module -->
+    <g class="fc-card">
+      <rect x="310" y="180" width="220" height="110" fill="white" stroke="#354A5F" stroke-width="2"/>
+      <rect x="310" y="180" width="220" height="28" fill="#354A5F"/>
+      <text x="420" y="199" text-anchor="middle" class="fc-title" font-size="11">srv Module (CAP Node.js)</text>
+      <text x="330" y="225" class="fc-body-light">AskService handler</text>
+      <text x="330" y="245" class="fc-body-light">RAG Engine + guardrails</text>
+      <text x="330" y="265" class="fc-body-light">Binds: XSUAA, HANA, AI Core</text>
+      <text x="330" y="280" class="fc-body-light">Memory: 512MB</text>
+    </g>
+
+    <!-- DB Deployer -->
+    <g class="fc-card">
+      <rect x="580" y="180" width="200" height="110" fill="white" stroke="#E9730C" stroke-width="2"/>
+      <rect x="580" y="180" width="200" height="28" fill="#E9730C"/>
+      <text x="680" y="199" text-anchor="middle" class="fc-title" font-size="11">db-deployer Module</text>
+      <text x="600" y="225" class="fc-body-light">Deploys CDS schema</text>
+      <text x="600" y="245" class="fc-body-light">to HANA Cloud</text>
+      <text x="600" y="265" class="fc-body-light">HDI container</text>
+      <text x="600" y="280" class="fc-body-light">hdbtable format</text>
+    </g>
+
+    <!-- Services -->
+    <g class="fc-card">
+      <rect x="60" y="330" width="160" height="80" fill="white" stroke="#BB0000" stroke-width="1.5"/>
+      <rect x="60" y="330" width="160" height="24" fill="#BB0000"/>
+      <text x="140" y="347" text-anchor="middle" class="fc-title" font-size="10">XSUAA Service</text>
+      <text x="80" y="372" class="fc-body-light">OAuth 2.0</text>
+      <text x="80" y="390" class="fc-body-light">Roles: Admin, Viewer</text>
+      <text x="80" y="405" class="fc-body-light">xs-security.json</text>
+    </g>
+
+    <g class="fc-card">
+      <rect x="250" y="330" width="160" height="80" fill="white" stroke="#E9730C" stroke-width="1.5"/>
+      <rect x="250" y="330" width="160" height="24" fill="#E9730C"/>
+      <text x="330" y="347" text-anchor="middle" class="fc-title" font-size="10">HANA Cloud</text>
+      <text x="270" y="372" class="fc-body-light">Vector Engine</text>
+      <text x="270" y="390" class="fc-body-light">VECTOR_SEARCH()</text>
+      <text x="270" y="405" class="fc-body-light">HDI Container</text>
+    </g>
+
+    <g class="fc-card">
+      <rect x="440" y="330" width="160" height="80" fill="white" stroke="#107E3E" stroke-width="1.5"/>
+      <rect x="440" y="330" width="160" height="24" fill="#107E3E"/>
+      <text x="520" y="347" text-anchor="middle" class="fc-title" font-size="10">SAP AI Core</text>
+      <text x="460" y="372" class="fc-body-light">Gen AI Hub</text>
+      <text x="460" y="390" class="fc-body-light">LLM + Embeddings</text>
+      <text x="460" y="405" class="fc-body-light">Destination binding</text>
+    </g>
+
+    <g class="fc-card">
+      <rect x="630" y="330" width="160" height="80" fill="white" stroke="#6A6D70" stroke-width="1.5"/>
+      <rect x="630" y="330" width="160" height="24" fill="#6A6D70"/>
+      <text x="710" y="347" text-anchor="middle" class="fc-title" font-size="10">Destination Service</text>
+      <text x="650" y="372" class="fc-body-light">SAP_AI_CORE dest</text>
+      <text x="650" y="390" class="fc-body-light">OAuth2 client creds</text>
+      <text x="650" y="405" class="fc-body-light">URL + token mgmt</text>
+    </g>
+
+    <!-- Arrows -->
+    <path d="M260,235 L310,235" class="fc-arrow"/>
+    <text x="273" y="228" class="fc-label">/api/*</text>
+
+    <path d="M530,260 L580,260" class="fc-arrow"/>
+    <text x="545" y="253" class="fc-label">schema</text>
+
+    <!-- Service bindings -->
+    <path d="M160,290 L160,330" class="fc-arrow" style="stroke:#BB0000;stroke-dasharray:4 3"/>
+    <path d="M420,290 L420,330" class="fc-arrow" style="stroke:#354A5F;stroke-dasharray:4 3"/>
+    <path d="M680,290 L680,330" class="fc-arrow" style="stroke:#E9730C;stroke-dasharray:4 3"/>
+
+    <!-- Dev vs Prod note -->
+    <g class="fc-card">
+      <rect x="840" y="180" width="210" height="230" fill="white" stroke="#D9D9D9" stroke-width="1.5"/>
+      <rect x="840" y="180" width="210" height="28" fill="#475E75"/>
+      <text x="945" y="199" text-anchor="middle" class="fc-title" font-size="11">Dev vs Production</text>
+
+      <text x="860" y="225" class="fc-body" font-weight="600" fill="#107E3E">Development:</text>
+      <text x="860" y="245" class="fc-body-light">cds watch</text>
+      <text x="860" y="262" class="fc-body-light">SQLite in-memory DB</text>
+      <text x="860" y="279" class="fc-body-light">Mocked auth (admin/user)</text>
+      <text x="860" y="296" class="fc-body-light">Demo LLM responses</text>
+
+      <line x1="860" y1="310" x2="1030" y2="310" stroke="#E0E0E0" stroke-width="1"/>
+
+      <text x="860" y="330" class="fc-body" font-weight="600" fill="#0854A0">Production:</text>
+      <text x="860" y="350" class="fc-body-light">cf deploy (MTA)</text>
+      <text x="860" y="367" class="fc-body-light">HANA Cloud + Vector</text>
+      <text x="860" y="384" class="fc-body-light">XSUAA OAuth 2.0</text>
+      <text x="860" y="401" class="fc-body-light">SAP AI Core LLM</text>
+    </g>
+  </svg>
+</div>
+
+</div>
+
+<!-- Footer -->
+<div style="background:#354A5F;color:white;padding:30px 60px;text-align:center;font-size:12px;opacity:0.9;">
+  <p>SAP AI Core RAG Assistant - Architecture Documentation</p>
+  <p style="opacity:0.6;margin-top:4px;">Built with SAP CAP | Node.js | SAP AI Core | SAP BTP</p>
+</div>
+
+<script>
+  // Smooth scroll + active nav
+  document.querySelectorAll('.nav a').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth' });
+      document.querySelectorAll('.nav a').forEach(n => n.classList.remove('active'));
+      a.classList.add('active');
+    });
+  });
+  window.addEventListener('scroll', () => {
+    const sections = document.querySelectorAll('.section');
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+    document.querySelectorAll('.nav a').forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  });
+</script>
+</body>
+</html>
