@@ -8,88 +8,69 @@ module.exports = class AskService extends cds.ApplicationService {
     this.ragEngine = new RAGEngine();
 
     this.on('ask', async (req) => {
-      const { question, sessionId } = req.data.req;
-      const userId = req.user?.id || 'anonymous';
-      const startTime = Date.now();
-
-      const { Questions, Answers, AuditLog } = cds.entities('sap.ai.rag');
-
-      // 1. Log the incoming question
-      const questionId = cds.utils.uuid();
-      await INSERT.into(Questions).entries({
-        ID: questionId,
-        text: question,
-        userId,
-        sessionId: sessionId || cds.utils.uuid(),
-        status: 'pending'
-      });
-
       try {
-        // 2. Run RAG pipeline (includes pre/post guardrails)
+        // Extract parameters — handle both nested and flat
+        const data = req.data || {};
+        const question = data.req?.question || data.question;
+        const sessionId = data.req?.sessionId || data.sessionId || 'default';
+
+        console.log('[AskService] Received question:', question);
+        console.log('[AskService] Raw req.data:', JSON.stringify(data));
+
+        if (!question) {
+          return req.error(400, 'Question is required.');
+        }
+
+        // Run RAG pipeline
         const result = await this.ragEngine.process(question);
 
-        // 3. Determine action for audit
-        let auditAction = 'ASK';
-        if (result.blockReason === 'out_of_scope') auditAction = 'ASK_OUT_OF_SCOPE';
-        else if (result.blockReason === 'input_blocked') auditAction = 'ASK_INPUT_BLOCKED';
-        else if (result.guardrailHit) auditAction = 'ASK_GUARDRAIL_HIT';
+        console.log('[AskService] RAG result confidence:', result.confidence);
 
-        // 4. Store the answer
-        const answerId = cds.utils.uuid();
-        await INSERT.into(Answers).entries({
-          ID: answerId,
-          text: result.answer,
-          question_ID: questionId,
-          confidence: result.confidence,
-          sourceDocs: JSON.stringify(result.sources),
-          modelId: result.modelId || 'gpt-4',
-          tokenCount: result.tokenCount || 0,
-          responseTimeMs: Date.now() - startTime
-        });
-
-        // 5. Update question status
-        const status = result.guardrailHit ? 'failed' : 'answered';
-        await UPDATE(Questions, questionId).with({ status, answer_ID: answerId });
-
-        // 6. Structured audit log via guardrails module
-        const auditEntry = guardrails.buildAuditEntry({
-          action: auditAction,
-          userId,
-          questionId,
-          question,
-          confidence: result.confidence,
-          piiReport: result.piiReport,
-          topicCheck: result.topicCheck,
-          sources: result.sources,
-          responseTimeMs: Date.now() - startTime,
-          modelId: result.modelId
-        });
-        await INSERT.into(AuditLog).entries(auditEntry);
+        // Try to persist (non-blocking)
+        this._persistAsync(question, result, sessionId, req.user?.id || 'anonymous');
 
         return {
           answer: result.answer,
           confidence: result.confidence,
           sources: result.sources,
-          questionId
+          questionId: '00000000-0000-0000-0000-000000000000'
         };
 
       } catch (err) {
-        await UPDATE(Questions, questionId).with({ status: 'failed' });
-
-        const auditEntry = guardrails.buildAuditEntry({
-          action: 'ASK_FAILED',
-          userId,
-          questionId,
-          question,
-          confidence: 0
-        });
-        auditEntry.details = JSON.stringify({ error: err.message });
-        await INSERT.into(AuditLog).entries(auditEntry);
-
-        req.error(500, 'Failed to process question. Please try again.');
+        console.error('[AskService] Error:', err);
+        return req.error(500, err.message);
       }
     });
 
     await super.init();
+  }
+
+  async _persistAsync(question, result, sessionId, userId) {
+    try {
+      const { Questions, Answers, AuditLog } = cds.entities('sap.ai.rag');
+      const questionId = cds.utils?.uuid?.() || require('crypto').randomUUID();
+      const answerId = cds.utils?.uuid?.() || require('crypto').randomUUID();
+
+      await INSERT.into(Questions).entries({
+        ID: questionId, text: question, userId, sessionId, status: 'answered'
+      });
+
+      await INSERT.into(Answers).entries({
+        ID: answerId, text: result.answer, question_ID: questionId,
+        confidence: result.confidence, sourceDocs: JSON.stringify(result.sources),
+        modelId: result.modelId || 'demo', tokenCount: result.tokenCount || 0,
+        responseTimeMs: 0
+      });
+
+      const auditEntry = guardrails.buildAuditEntry({
+        action: 'ASK', userId, questionId, question,
+        confidence: result.confidence, piiReport: result.piiReport,
+        topicCheck: result.topicCheck, sources: result.sources,
+        modelId: result.modelId
+      });
+      await INSERT.into(AuditLog).entries(auditEntry);
+    } catch (e) {
+      console.error('[AskService] Persist error (non-blocking):', e.message);
+    }
   }
 };

@@ -6,18 +6,20 @@
   "license": "Apache-2.0",
   "private": true,
   "dependencies": {
-    "@sap/cds": "^7",
-    "@sap/xssec": "^3",
-    "@sap-cloud-sdk/http-client": "^3",
+    "@cap-js/sqlite": "^2.2.0",
     "@sap-cloud-sdk/connectivity": "^3",
+    "@sap-cloud-sdk/http-client": "^3",
+    "@sap/cds": "^8",
+    "@sap/xssec": "^3",
+    "better-sqlite3": "^12.8.0",
     "express": "^4",
     "hdb": "^0.19",
     "passport": "^0.7"
   },
   "devDependencies": {
-    "@sap/cds-dk": "^7",
-    "@sap/ux-specification": "latest",
-    "rimraf": "^5"
+    "@sap/cds-dk": "^9.8.2",
+    "@sap/ux-specification": "^1.124.18",
+    "rimraf": "^6.1.3"
   },
   "scripts": {
     "start": "cds-serve",
@@ -31,8 +33,25 @@
       "db": {
         "kind": "sql"
       },
+      "[production]": {
+        "auth": {
+          "kind": "xsuaa"
+        }
+      },
       "auth": {
-        "kind": "xsuaa"
+        "kind": "mocked",
+        "users": {
+          "admin": {
+            "password": "admin",
+            "roles": [
+              "admin"
+            ]
+          },
+          "user": {
+            "password": "user",
+            "roles": []
+          }
+        }
       },
       "SAP_AI_CORE": {
         "kind": "rest",

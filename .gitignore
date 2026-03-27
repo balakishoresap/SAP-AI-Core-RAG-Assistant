@@ -3,6 +3,8 @@ gen/
 dist/
 *.db
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal
 default-*.json
 connection.properties
 .env

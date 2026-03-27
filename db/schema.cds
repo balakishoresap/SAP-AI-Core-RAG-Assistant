@@ -27,7 +27,7 @@ entity Questions : cuid, managed {
   text        : LargeString  @title: 'Question Text';
   userId      : String(256)  @title: 'User ID';
   sessionId   : String(128)  @title: 'Session ID';
-  status      : String enum { pending; answered; failed }  @title: 'Status';
+  status      : String(16)   @title: 'Status';  // values: pending, answered, failed
   answer      : Association to Answers;
 }
 
@@ -52,7 +52,7 @@ entity AuditLog : cuid, managed {
   userId      : String(256)  @title: 'User ID';
   questionId  : UUID         @title: 'Question ID';
   details     : LargeString  @title: 'Details (JSON)';
-  piiDetected : Boolean default false  @title: 'PII Detected';
-  guardrailHit: Boolean default false  @title: 'Guardrail Triggered';
+  piiDetected : Boolean  @title: 'PII Detected';
+  guardrailHit: Boolean  @title: 'Guardrail Triggered';
   ipAddress   : String(64)   @title: 'IP Address';
 }
